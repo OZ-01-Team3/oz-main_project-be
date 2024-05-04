@@ -45,6 +45,7 @@ DJANGO_SYSTEM_APPS = [
 ]
 
 CUSTOM_USER_APPS = [
+    "django_extensions",
     "rest_framework",
 ]
 
