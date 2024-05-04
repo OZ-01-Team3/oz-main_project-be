@@ -18,6 +18,7 @@ isort = "^5.13.2"
 mypy = "^1.10.0"
 django-stubs = "^5.0.0"
 coverage = "^7.5.0"
+django-debug-toolbar = "^4.3.0"
 
 [build-system]
 requires = ["poetry-core"]
