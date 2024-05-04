@@ -11,6 +11,17 @@ MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE
 
 INTERNAL_IPS = ["127.0.0.1"]
 
+DATABASES = {
+    "default": {
+        "ENGINE": env("DATABASE_ENGINE"),
+        "NAME": env("DATABASE_NAME"),
+        "USER": env("DATABASE_USER"),
+        "PASSWORD": env("DATABASE_PASSWORD"),
+        "HOST": env("DATABASE_HOST"),
+        "PORT": env("DATABASE_PORT"),
+    }
+}
+
 log_file_path = os.path.join(BASE_DIR, "logs", "django.log")
 LOGGING = {
     "version": 1,
