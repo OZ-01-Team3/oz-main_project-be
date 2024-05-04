@@ -48,6 +48,7 @@ CUSTOM_USER_APPS = [
     "django_extensions",
     "rest_framework",
     "drf_spectacular",
+    "apps.account",
 ]
 
 INSTALLED_APPS = DJANGO_SYSTEM_APPS + CUSTOM_USER_APPS
@@ -130,6 +131,8 @@ STATIC_ROOT = BASE_DIR / "static"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "account.Account"
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASSES": "drf_spectacular.openapi.AutoSchema",

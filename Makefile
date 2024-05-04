@@ -17,6 +17,9 @@ PROD = prod
 PRODFILE = $(PROD).py
 APPDIR = apps
 
+DCK = docker
+DBCONT = psqldb
+
 SCRIPT = ./scripts/test.sh
 SETTING = --settings=$(CONF).$(SETDIR).$(SET)
 LOCSET = --settings=$(CONF).$(SETDIR).$(LOC)
@@ -78,6 +81,15 @@ bim: $(SCRIPT) ## black, isort, mypy, coverage
 install: ## poetry install
 	$(PTR) install	
 
-start: makemigrations migrate runserver ## makemigrations + migrate + runserver
+runstart: makemigrations migrate runserver ## makemigrations + migrate + runserver
+
+start: ## docker db start
+	$(DCK) start $(DBCONT)
+
+stop: ## docker db stop
+	$(DCK) stop $(DBCONT)
+
+exec: ## enter the container
+	$(DCK) exec -it $(DBCONT) /bin/sh
 
 .PHONY: all help setlocal setprod runserver migrations makemigrations migrate showmigrations sqlmigrate collectstatic app test bim install start
