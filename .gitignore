@@ -490,4 +490,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Docker
+data/
+dockerfail/
+
 # End of https://www.toptal.com/developers/gitignore/api/python,django,pycharm,vim,visualstudiocode,venv,macos,windows

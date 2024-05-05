@@ -17,11 +17,10 @@ RUN poetry config virtualenvs.create false \
 COPY ./manage.py ./manage.py
 COPY ./config ./config
 COPY ./apps ./apps
+COPY ./tools ./tools
 COPY ./env-be ./env-be
 
 RUN export $(cat env-be/.env | xargs)
-
-ENV DB_HOST db
 
 COPY ./entrypoint.sh ./entrypoint.sh
 ENTRYPOINT ["./entrypoint.sh"]

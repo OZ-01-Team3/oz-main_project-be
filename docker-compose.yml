@@ -1,39 +1,41 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:16.2-alpine3.19
+    container_name: db
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    env_file:
+      - ./env-be/.env
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    ports:
+      - "54321:5432"
+
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ysolarh/backend:latest
-    container_name: backend
-    env_file:
-      - .env
-    environment:
-      - DB_HOST=${MYSQL_HOST}
+    container_name: be
     volumes:
-      - ./app:/backend/app
-      - ./mysite:/backend/mysite
+      - ./apps:/backend/apps
+      - ./config:/backend/config
+      - ./tools:/backend/tools
     ports:
       - "8000:8000"
-    expose:
-      - "8000"
     depends_on:
       - db
 
-  db:
-    image: mysql:8.3.0
-    container_name: db
-    volumes:
-      - ./db/conf.d:/etc/mysql/conf.d
-      - ./db/data:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_HOST=${MYSQL_HOST}
-      - MYSQL_USER = ${DB_USER}
-      - MYSQL_DATABASE=${DB_NAME}
-      - TZ=Asia/Seoul
+  nginx:
+    image: nginx:1.25.5-alpine
+    container_name: nginx
     ports:
-      - "33306:3306"
-
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
 
