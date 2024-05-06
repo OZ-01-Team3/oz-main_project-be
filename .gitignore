@@ -494,4 +494,6 @@ $RECYCLE.BIN/
 data/
 dockerfail/
 
+nginx/
+
 # End of https://www.toptal.com/developers/gitignore/api/python,django,pycharm,vim,visualstudiocode,venv,macos,windows

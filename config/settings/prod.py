@@ -13,3 +13,9 @@ DATABASES = {
         "PORT": env("DATABASE_PORT"),
     }
 }
+
+CSRF_TRUSTED_ORIGINS = ['https://mydj.localhost']
+
+CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_SECURE = True
