@@ -50,6 +50,7 @@ CUSTOM_USER_APPS = [
     "rest_framework",
     "drf_spectacular",
     "apps.account",
+    "apps.category",
 ]
 
 INSTALLED_APPS = DJANGO_SYSTEM_APPS + CUSTOM_USER_APPS
