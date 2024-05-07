@@ -48,6 +48,7 @@ DJANGO_SYSTEM_APPS = [
 CUSTOM_USER_APPS = [
     "channels",
     "uvicorn",
+    "django_cleanup.apps.CleanupConfig",
     "django_extensions",
     "rest_framework",
     "drf_spectacular",
@@ -151,3 +152,36 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            # "session_profile": env("AWS_S3_SESSION_PROFILE"),
+            "access_key": env("AWS_ACCESS_KEY_ID"),
+            "secret_key": env("AWS_SECRET_ACCESS_KEY"),
+            "bucket_name": env("AWS_STORAGE_BUCKET_NAME"),
+            # "default_acl": env("AWS_DEFAULT_ACL"),
+            "region_name": env("AWS_S3_REGION_NAME"),
+            "use_ssl": env("AWS_S3_USE_SSL"),
+            "custom_domain": env("AWS_STORAGE_BUCKET_NAME") + ".s3.amazonaws.com",
+            # "cloudfront_key": env("AWS_CLOUDFRONT_KEY"),
+            # "cloudfront_key_id": env("AWS_CLOUDFRONT_KEY_ID")
+        }
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+    }
+}
+
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+# DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+# AWS_SESSION_PROFILE = env("AWS_S3_SESSION_PROFILE")
+# AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+# AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+# AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+# AWS_REGION_NAME = env("AWS_S3_REGION_NAME")
+# AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+# AWS_DEFAULT_ACL = env("AWS_DEFAULT_ACL")
+# AWS_QUERYSTRING_AUTH = False
