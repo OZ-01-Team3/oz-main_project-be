@@ -47,11 +47,13 @@ DJANGO_SYSTEM_APPS = [
 
 CUSTOM_USER_APPS = [
     "channels",
+    "uvicorn",
     "django_extensions",
     "rest_framework",
     "drf_spectacular",
     "apps.account",
     "apps.category",
+    "apps.chat",
 ]
 
 INSTALLED_APPS = DJANGO_SYSTEM_APPS + CUSTOM_USER_APPS
