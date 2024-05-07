@@ -1,3 +1,8 @@
 from django.shortcuts import render
+from rest_framework import generics
 
-# Create your views here.
+from apps.account.models import Account
+
+
+class LoginView(generics.CreateAPIView[Account]):
+    pass

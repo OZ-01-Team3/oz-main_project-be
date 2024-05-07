@@ -1,12 +1,13 @@
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from apps.category.models import Category
 
 
 class CategoryModelTest(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         Category.objects.create(name="test_category1")
         Category.objects.create(name="test_category2")
 
@@ -14,7 +15,8 @@ class CategoryModelTest(TestCase):
         """
         모든 카테고리 조회
         """
+        client = APIClient()
         url = reverse("category-list")
-        response = self.client.get(url)
+        response = client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

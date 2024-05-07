@@ -1,10 +1,13 @@
+import django_stubs_ext
 from django.contrib import admin
 
 from .models import Account
 
+django_stubs_ext.monkeypatch()
+
 
 @admin.register(Account)
-class AccountAdmin(admin.ModelAdmin):
+class AccountAdmin(admin.ModelAdmin[Account]):
     list_display = (
         "id",
         "email",
