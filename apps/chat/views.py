@@ -1,12 +1,12 @@
 from typing import Any
 
-from apps.chat import serializers
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.chat import serializers
 from apps.chat.models import Alert, Chatroom, Message
 from apps.chat.utils import (
     change_entered_status,

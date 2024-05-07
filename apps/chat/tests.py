@@ -1,33 +1,29 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from apps.account.models import Account
-# from rest_framework_simplwjwt.tokens import AccessToken
 
+from apps.account.models import Account
 from apps.chat.models import Chatroom, Message
+
+# from rest_framework_simplwjwt.tokens import AccessToken
 
 
 class ChatRoomTestCase(APITestCase):
     def setUp(self) -> None:
         self.user = Account.objects.create_user(
-            email='test@example.com',
-            password='testpw123',
-            nickname='testnickname',
-            phone='010-1234-5678'
+            email="test@example.com",
+            password="testpw123",
         )
         self.borrower = Account.objects.create_user(
-            email='test2@example.com',
-            password='testpw1234',
-            nickname='testnickname2',
-            phone='010-1234-5671'
+            email="test2@example.com",
+            password="testpw1234",
         )
         # self.token = AccessToken.for_user(self.user)
         self.client.force_login(user=self.user)
+
     def test_정상적인_채팅방_만들기_요청(self) -> None:
         url = reverse("chatroom")
-        data = {
-            "borrower": self.borrower.id
-        }
+        data = {"borrower": self.borrower.id}
 
         # response = self.client.post(url, data, headers={"Authorization": f"Bearer {self.token}"})
         response = self.client.post(url, data)
@@ -38,9 +34,7 @@ class ChatRoomTestCase(APITestCase):
 
     def test_잘못된_borrower의_아이디로_채팅방을_개설하려는_경우(self) -> None:
         url = reverse("chatroom")
-        data = {
-            "borrower": 13241
-        }
+        data = {"borrower": 13241}
 
         # response = self.client.post(url, data, headers={"Authorization": f"Bearer {self.token}"})
         response = self.client.post(url, data)
@@ -51,33 +45,12 @@ class ChatRoomTestCase(APITestCase):
 
 class ChatDetailTestCase(APITestCase):
     def setUp(self) -> None:
-        self.user = Account.objects.create_user(
-            email='test@example.com',
-            password='testpw123',
-            nickname='testnickname',
-            phone='010-1234-5678'
-        )
-        self.borrower = Account.objects.create_user(
-            email='test2@example.com',
-            password='testpw1234',
-            nickname='testnickname2',
-            phone='010-1234-5671'
-        )
-        self.chatroom = Chatroom.objects.create(
-            borrower=self.borrower,
-            lender=self.user
-        )
+        self.user = Account.objects.create_user(email="test@example.com", password="testpw123")
+        self.borrower = Account.objects.create_user(email="test2@example.com", password="testpw1234")
+        self.chatroom = Chatroom.objects.create(borrower=self.borrower, lender=self.user)
         for i in range(10):
-            Message.objects.create(
-                chatroom=self.chatroom,
-                sender=self.user,
-                text=f"test-message-{i}"
-            )
-            Message.objects.create(
-                chatroom=self.chatroom,
-                sender=self.borrower,
-                text=f"test-message-{i}"
-            )
+            Message.objects.create(chatroom=self.chatroom, sender=self.user, text=f"test-message-{i}")
+            Message.objects.create(chatroom=self.chatroom, sender=self.borrower, text=f"test-message-{i}")
         # self.token = AccessToken.for_user(self.user)
         self.client.force_login(user=self.user)
 
@@ -89,12 +62,7 @@ class ChatDetailTestCase(APITestCase):
         self.assertEqual(Message.objects.count(), len(response.data))
 
     def test_비정상적인_유저가_get요청을_보내는_경우(self) -> None:
-        invaild_user = Account.objects.create_user(
-            email='invalid-user@example.com',
-            password='testpassword123',
-            nickname='invaliduser',
-            phone='010-1234-5633'
-        )
+        invaild_user = Account.objects.create_user(email="invalid-user@example.com", password="testpassword123")
         self.client.logout()
         self.client.force_login(invaild_user)
 
@@ -134,12 +102,7 @@ class ChatDetailTestCase(APITestCase):
         self.assertEqual(response.data.get("msg"), "채팅방에 남은 유저가 없어 채팅방이 삭제되었습니다.")
 
     def test_비정상적인_유저가_delete요청을_보내는_경우(self) -> None:
-        invaild_user = Account.objects.create_user(
-            email='invalid-user@example.com',
-            password='testpassword123',
-            nickname='invaliduser',
-            phone='010-1234-5633'
-        )
+        invaild_user = Account.objects.create_user(email="invalid-user@example.com", password="testpassword123")
         self.client.logout()
         self.client.force_login(invaild_user)
 
@@ -155,5 +118,3 @@ class ChatDetailTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data.get("msg"), "해당 채팅방이 존재하지 않습니다.")
-
-
