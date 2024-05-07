@@ -50,6 +50,7 @@ CUSTOM_USER_APPS = [
     "rest_framework",
     "drf_spectacular",
     "apps.account",
+    "apps.category",
 ]
 
 INSTALLED_APPS = DJANGO_SYSTEM_APPS + CUSTOM_USER_APPS
@@ -136,7 +137,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "account.Account"
 
 REST_FRAMEWORK = {
-    "DEFAULT_SCHEMA_CLASSES": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 SPECTACULAR_SETTINGS = {

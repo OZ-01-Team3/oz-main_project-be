@@ -18,7 +18,7 @@ COPY ./manage.py ./manage.py
 COPY ./config ./config
 COPY ./apps ./apps
 COPY ./tools ./tools
-COPY ./env-be ./env-be
+COPY ./.env ./.env
 
 RUN export $(cat env-be/.env | xargs)
 

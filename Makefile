@@ -20,7 +20,7 @@ APPDIR = apps
 DCK = docker
 DBCONT = psqldb
 
-SCRIPT = ./scripts/test.sh
+SCRIPT = ./test.sh
 SETTING = --settings=$(CONF).$(SETDIR).$(SET)
 LOCSET = --settings=$(CONF).$(SETDIR).$(LOC)
 PRODSET = --settings=$(CONF).$(SETDIR).$(PROD)

@@ -13,7 +13,7 @@ poetry run isort .
 echo "OK"
 
 echo "Starting mypy"
-poetry run mypy .
+poetry run mypy --explicit-package-bases .
 echo "OK"
 
 #echo "Run tests"
