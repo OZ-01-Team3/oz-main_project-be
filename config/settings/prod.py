@@ -14,8 +14,6 @@ DATABASES = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = ['https://mydj.localhost']
-
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
 CSRF_COOKIE_SECURE = True
-
 SESSION_COOKIE_SECURE = True
