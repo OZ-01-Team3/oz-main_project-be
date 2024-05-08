@@ -7,7 +7,7 @@ class CreateChatroomSerializer(serializers.ModelSerializer[Chatroom]):
     class Meta:
         model = Chatroom
         fields = "__all__"
-        read_only_fields = ["lender"]
+        read_only_fields = ["lender", "borrower_status", "lender_status"]
 
 
 class MessageSerializer(serializers.ModelSerializer[Message]):
