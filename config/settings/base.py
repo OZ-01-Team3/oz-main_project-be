@@ -47,6 +47,7 @@ DJANGO_SYSTEM_APPS = [
 
 CUSTOM_USER_APPS = [
     "channels",
+    "channels_redis",
     "uvicorn",
     "django_cleanup.apps.CleanupConfig",
     "django_extensions",
