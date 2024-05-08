@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Test</title>
+    <style>
+        #chat-messages {
+            height: 800px;
+            width: 1200px;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-messages"></div>
+    <input type="file" id="imageInput">
+    <input type="text" id="messageInput">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const imageInput = document.getElementById('imageInput');
+        const messageInput = document.getElementById('messageInput');
+
+
+
+        // WebSocket 연결
+        const socket = new WebSocket('ws://localhost:8000/ws/chat/1/'); // 채팅방 ID를 지정해야 합니다.
+        
+        // 파일 선택 이벤트 핸들러
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imageData = event.target.result;
+                    imageInput.imageData = imageData; // 이미지 데이터를 input 요소에 저장
+                };
+                reader.readAsDataURL(file); // 이미지 파일을 읽음
+            }
+        });
+
+        // 메시지 수신 처리
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log(data)
+            const message = data.message;
+            const senderEmail = data.sender_email;
+            const imageUrl = data.image_url;
+            console.log(imageUrl, senderEmail, message)
+            const imageTag = imageUrl ? `<img src="${imageUrl}" style="width: 100px; height: 100px;">` : '';
+            const messageHtml = `<p><strong>${senderEmail}:</strong> ${message}</p>`;
+            chatMessages.innerHTML += imageTag + messageHtml; // 이미지와 텍스트 함께 출력
+            // chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        // 이미지, 텍스트 전송 함수
+        function sendMessage() {
+            const imageData = imageInput.imageData || ''; // 이미지 데이터 가져오기
+            const message = messageInput.value;
+            socket.send(JSON.stringify({
+                'image': imageData,
+                'message': message,
+                'sender_email': 'eodyd426@gmail.com' // 본인의 이메일을 여기에 입력하세요.
+            }));
+            messageInput.value = ''; // 메시지 전송 후 입력 필드 비우기
+            imageInput.imageData = ''; // 이미지 데이터 초기화
+        }
+    </script>
+</body>
+</html>
+
