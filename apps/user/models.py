@@ -31,7 +31,7 @@ class AccountManager(BaseUserManager["Account"]):
 
 class Account(AbstractBaseUser, PermissionsMixin, BaseModel):
     email = models.EmailField(max_length=100, unique=True, null=False, blank=False)
-    nickname = models.CharField(max_length=15)
+    nickname = models.CharField(max_length=15, unique=True)
     age = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=7, null=True, blank=True)
     height = models.IntegerField(null=True, blank=True)

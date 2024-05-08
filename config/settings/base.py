@@ -89,7 +89,9 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            os.path.join(BASE_DIR, "templates"),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -255,11 +257,25 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # default: "none"
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # default: "none", optional
 # 필수 아님
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_ADAPTER = "apps.user.adapters.CustomAccountAdapter"
-# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # ?
+# 이메일 인증
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# django SMTP 설정
+EMAIL_HOST = "smtp.gmail.com"  # 메일 호스트 서버
+EMAIL_PORT = "587"  # gmail과 통신하는 포트
+EMAIL_HOST_USER = "empt311@gmail.com"  # 발신할 이메일
+EMAIL_HOST_PASSWORD = "zjokrauqcvpwfodv"
+EMAIL_USE_TLS = True  # TLS 보안 방법
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# URL_FRONT = env("URL_FRONT")
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # 유저가 받은 링크를 클릭하면 회원가입 완료되게끔
+EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
 
 # TODO
 # AUTHENTICATION_BACKENDS = [
