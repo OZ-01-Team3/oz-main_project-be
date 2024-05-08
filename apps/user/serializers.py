@@ -13,6 +13,11 @@ class SignupSerializer(RegisterSerializer):
         model = Account
         fields = ("email", "password1", "password2", "nickname", "phone")
 
+    def validate_nickname(self, nickname):
+        if Account.objects.filter(nickname=nickname).exists():
+            raise serializers.ValidationError("This nickname is already in use.")
+        return nickname
+
 
 class UserInfoSerializer(UserDetailsSerializer):
     password1 = serializers.CharField(write_only=True)
