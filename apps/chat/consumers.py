@@ -1,10 +1,13 @@
 import base64
+import logging
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.core.files.base import ContentFile
 from apps.user.models import Account
 from apps.chat.models import Message, Chatroom, Alert
+
+logger = logging.getLogger(__name__)
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
@@ -26,7 +29,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         except (KeyError, ValueError) as e:
             # chatroom_id를 가져오지 못하거나 해당 채팅방이 존재하지않으면 에러 메시지를 보내고 연결 해제
-            await self.send_json({'error': str(e)})
+            logger.error("예외 발생: %s", e, exc_info=True)
+            await self.send_json({"error": str(e)})
             await self.close()
 
     async def receive_json(self, content):
@@ -63,7 +67,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
         # 예외 발생 시 내용을 json으로 보내줌
         except Exception as e:
-            await self.send_json({'error': str(e)})
+            logger.error("예외 발생: %s", e, exc_info=True)
+            await self.send_json({"error": str(e)})
 
     # 소켓 연결 해제
     async def disconnect(self, close_code):
@@ -82,7 +87,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json(
                 {"type": "chat_message", "message": message, "sender_email": sender_email, "image_url": image_url}
             )
-        except Exception:
+        except Exception as e:
+            logger.error("예외 발생: %s", e, exc_info=True)
             await self.send_json({"error": "메시지 전송 실패"})
 
     @staticmethod
