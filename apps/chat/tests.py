@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.account.models import Account
+from apps.user.models import Account
 from apps.chat.models import Chatroom, Message
 
 # from rest_framework_simplwjwt.tokens import AccessToken

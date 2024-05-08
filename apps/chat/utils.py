@@ -2,7 +2,7 @@ from typing import Union
 
 from django.contrib.auth.models import AnonymousUser
 
-from apps.account.models import Account
+from apps.user.models import Account
 from apps.chat.models import Chatroom
 
 
