@@ -167,11 +167,9 @@ STORAGES = {
             "custom_domain": env("AWS_STORAGE_BUCKET_NAME") + ".s3.amazonaws.com",
             # "cloudfront_key": env("AWS_CLOUDFRONT_KEY"),
             # "cloudfront_key_id": env("AWS_CLOUDFRONT_KEY_ID")
-        }
+        },
     },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
-    }
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
 # STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"

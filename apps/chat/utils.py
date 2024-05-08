@@ -1,8 +1,12 @@
+from typing import Union
+
+from django.contrib.auth.models import AnonymousUser
+
 from apps.account.models import Account
 from apps.chat.models import Chatroom
 
 
-def check_entered_chatroom(chatroom: Chatroom, user: Account) -> bool:
+def check_entered_chatroom(chatroom: Chatroom, user: Union[Account, AnonymousUser]) -> bool:
     """
     만약 유저가 borrower이면 borrower_status의 값을 반환해서 채팅방에 존재하는지 나갔는지를 판단
     만약 유저가 lender이면 lender_status의 값을 반환해서 채팅방에 존재하는지 나갔는지를 판단
@@ -16,7 +20,7 @@ def check_entered_chatroom(chatroom: Chatroom, user: Account) -> bool:
         return False
 
 
-def change_entered_status(chatroom: Chatroom, user: Account) -> None:
+def change_entered_status(chatroom: Chatroom, user: Union[Account, AnonymousUser]) -> None:
     """
     채팅방에 참여해 있는 유저의 역할을 파악하고, 그에 맞는 status를 False로 변경(False는 나가기한 상태)
     """
