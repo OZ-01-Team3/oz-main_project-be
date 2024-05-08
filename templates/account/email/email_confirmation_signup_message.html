@@ -8,17 +8,15 @@
 
 <!DOCTYPE html>
 <html>
-...
-<p>
-  귀하의 아이디는
-  	<span style="font-weight:bold;">{{ user_display }}</span>
-  입니다.
-</p>
+  ...
+  <p>
+    이메일은
+    <span style="font-weight: bold">{{ user_display }}</span>
+    입니다.
+  </p>
 
-<a href="{{ activate_url }}" target="_blank">
-  계정 인증하기
-</a>
-...
+  <a href="{{ activate_url }}" target="_blank"> 계정 인증하기</a>
+  ...
 </html>
 
 {% endblocktrans %}

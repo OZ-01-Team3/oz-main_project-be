@@ -1,2 +1,1 @@
-# email_confirmation_subject.txt (제목)
-회원가입 인증 이메일입니다.
+회원가입 인증 이메일
