@@ -33,3 +33,9 @@ class UserInfoSerializer(UserDetailsSerializer):
     class Meta:
         model = Account
         fields = ("email", "password1", "password2", "nickname", "phone", "age", "gender", "height", "region", "grade")
+
+    def validate_nickname(self, nickname):
+        account_id = self.context["request"].user.id
+        if Account.objects.filter(nickname=nickname).exclude(id=account_id).exists():
+            raise serializers.ValidationError("This nickname is already in use.")
+        return nickname

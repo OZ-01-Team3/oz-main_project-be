@@ -24,7 +24,6 @@ DATABASES = {
     }
 }
 
-<<<<<<< HEAD
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -33,7 +32,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
-=======
+
 # CACHES = {
 #     "default": {
 #         "BACKEND": "django_redis.cache.RedisCache",
@@ -43,7 +42,6 @@ CHANNEL_LAYERS = {
 #         },
 #     }
 # }
->>>>>>> f686b7a (Feat: 회원 이메일 인증 기능 구현)
 
 log_file_path = os.path.join(BASE_DIR, "logs", "django.log")
 LOGGING = {
