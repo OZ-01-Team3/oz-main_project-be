@@ -115,4 +115,3 @@ stop: ## docker db stop
 .PHONY: exec
 exec: ## enter the container
 	$(DCK) exec -it $(DBCONT) /bin/sh
-
