@@ -1,8 +1,15 @@
-from allauth.account.models import EmailConfirmationHMAC, EmailConfirmation
+from allauth.account import app_settings
+from allauth.account.models import (
+    EmailConfirmation,
+    EmailConfirmationHMAC,
+    get_emailconfirmation_model,
+)
+from allauth.account.views import ConfirmEmailView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import render
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
@@ -11,7 +18,6 @@ from rest_framework.views import APIView
 
 from apps.user.models import Account
 from config.settings.base import env
-
 
 # class GoogleLogin(SocialLoginView):
 #     adapter_class = GoogleOAuth2Adapter
@@ -22,26 +28,28 @@ from config.settings.base import env
 class CustomConfirmEmailView(APIView):
     permission_classes = [AllowAny]
 
-    # def get(self, request, pk, token):
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs) -> Response:
+        try:
+            self.object = self.get_object()
+            if app_settings.CONFIRM_EMAIL_ON_GET:
+                return self.post(*args, **kwargs)
+        except Http404:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, *args, **kwargs) -> Response:
         self.object = confirmation = self.get_object()
-        confirmation.confirm(self.request)
-        # return HttpResponseRedirect("/")
+        email_address = confirmation.confirm(self.request)
+        if not email_address:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK)
 
-    def get_object(self, queryset=None):
-        key = self.kwargs.get("key")
-        email_confirmation = EmailConfirmationHMAC.from_key(key)
+    def get_object(self, queryset=None) -> EmailConfirmationHMAC | None:
+        key = self.kwargs["key"]
+        model = get_emailconfirmation_model()
+        email_confirmation = model.from_key(key)
         if not email_confirmation:
-            if queryset is None:
-                queryset = self.get_queryset()
-            try:
-                email_confirmation = queryset.get(key=key.lower())
-            except EmailConfirmation.DoesNotExist:
-                return HttpResponseRedirect('/')  # TODO 주소 변경
+            raise Http404()
         return email_confirmation
 
-    def get_queryset(self):
-        queryset = EmailConfirmation.objects.all_valid()
-        queryset = queryset.select_related("email_address__user")
-        return queryset
+    def get_queryset(self) -> EmailConfirmation | None:
+        return EmailConfirmation.objects.all_valid().select_related("email_address__user")
