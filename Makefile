@@ -51,6 +51,10 @@ setprod: ## prod에서 settings.py 설정
 runserver: ## python manage.py runserver
 	$(PY) $(MNG) runserver
 
+.PHONY: runserverp
+runserverp: ## python manage.py runserver
+	$(PY) $(MNG) runserver $(h):$(p)
+
 .PHONY: migrations
 migrations: ## python manage.py makemigrations
 	$(PY) $(MNG) makemigrations $(a)
