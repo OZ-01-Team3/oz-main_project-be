@@ -42,7 +42,7 @@ CHANNEL_LAYERS = {
 #         },
 #     }
 # }
-
+CSRF_TRUSTED_ORIGINS = ['*']
 log_file_path = os.path.join(BASE_DIR, "logs", "django.log")
 LOGGING = {
     "version": 1,
