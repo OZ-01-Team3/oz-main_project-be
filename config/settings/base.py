@@ -55,6 +55,7 @@ CUSTOM_USER_APPS = [
     "drf_spectacular",
     "apps.account",
     "apps.category",
+    "apps.product",
     "apps.chat",
 ]
 
