@@ -1,6 +1,6 @@
 from django.db import models
 
-from apps.account.models import Account
+from apps.user.models import Account
 from apps.common.utils import uuid4_generator
 
 

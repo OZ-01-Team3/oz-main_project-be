@@ -38,7 +38,7 @@ setlocal: ## local에서 settings.py 설정
 	#$(LN) $(CONF)/$(SETDIR)/$(LOCFILE) $(CONF)/$(SETDIR)/$(SETFILE)
 	$(LN) $(LOCFILE) $(CONF)/$(SETDIR)/$(SETFILE)
 	# $(EXP) $(DJSET)=$(CONF).$(LOC)
-	#$(EXP) $(DJSET)=$(CONF).$(SETDIR).$(LOC)
+	$(EXP) $(DJSET)=$(CONF).$(SETDIR).$(LOC)
 
 .PHONY: setprod
 setprod: ## prod에서 settings.py 설정

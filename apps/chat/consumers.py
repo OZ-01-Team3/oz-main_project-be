@@ -3,7 +3,7 @@ import base64
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.core.files.base import ContentFile
-from apps.account.models import Account
+from apps.user.models import Account
 from apps.chat.models import Message, Chatroom, Alert
 
 
