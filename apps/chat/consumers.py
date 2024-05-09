@@ -6,6 +6,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.core.files.base import ContentFile
 from apps.user.models import Account
 from apps.chat.models import Message, Chatroom, Alert
+from apps.chat.serializers import MessageSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -15,16 +16,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         try:
             # scope로 채팅방 id 가져오기
-            self.chatroom_id = self.scope['url_route']['kwargs']['chatroom_id']
+            self.chatroom_id = self.scope["url_route"]["kwargs"]["chatroom_id"]
             self.chat_group_name = self.get_group_name(self.chatroom_id)
 
             if not await self.check_room_exists(self.chatroom_id):
-                raise ValueError('해당 채팅방이 존재하지 않습니다.')
+                raise ValueError("해당 채팅방이 존재하지 않습니다.")
 
-            await self.channel_layer.group_add(
-                self.chat_group_name,
-                self.channel_name
-            )
+            await self.channel_layer.group_add(self.chat_group_name, self.channel_name)
             await self.accept()
 
         except (KeyError, ValueError) as e:
@@ -40,30 +38,32 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """
         try:
             # 수신된 JSON에서 필요한 데이터를 가져옴
-            message = content.get('message')
-            sender_email = content.get('sender_email')
-            image = content.get('image')
+            message = content.get("message")
+            nickname = content.get("nickname")
+            image = content.get("image")
             # 이메일로 유저를 가져옴
-            sender = await self.get_user(email=sender_email)
+            sender = await self.get_user(nickname=nickname)
 
-            if image:
-                image_data = self.decode_image(image)
+
             # 메시지를 데이터 베이스에 저장함
             chat = await self.save_chat_message(
-                message=message, sender=sender, image=image_data, chatroom_id=self.chatroom_id
+                message=message, sender=sender, chatroom_id=self.chatroom_id
             )
-            from apps.chat.serializers import MessageSerializer
+            if image:
+                image_data = self.decode_image(image)
+                chat.update(image=image_data)
 
             serializer = MessageSerializer(chat)
             # 수신된 메시지와 정보를 그룹에 속한 채팅 참가자들에게 보내기
             await self.channel_layer.group_send(
                 self.chat_group_name,
                 {
-                    'type': 'chat_message',
-                    'message': serializer.data.get('text'),
-                    'sender_email': serializer.data.get('sender_nickname'),
-                    'image_url': serializer.data.get('image'),
-                }
+                    "message_id": serializer.data.get("id"),
+                    "type": "chat_message",
+                    "message": serializer.data.get("text"),
+                    "nickname": serializer.data.get("nickname"),
+                    "image_url": serializer.data.get("image"),
+                },
             )
         # 예외 발생 시 내용을 json으로 보내줌
         except Exception as e:
@@ -80,12 +80,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         그룹으로부터 수신한 메시지를 클라이언트에 전달
         """
         try:
+            message_id = event.get("message_id")
             message = event.get("message")
-            sender_email = event.get("sender_email")
+            nickname = event.get("nickname")
             image_url = event.get("image_url")
 
+            # 만약 메시지 sender와 수신자의 id가 다르다면 메시지 읽음처리
+            message_obj = await self.update_message_status(message_id, self.scope["user"].id)
+
             await self.send_json(
-                {"type": "chat_message", "message": message, "sender_email": sender_email, "image_url": image_url}
+                {
+                    "type": "chat_message",
+                    "message": message,
+                    "nickname": nickname,
+                    "image_url": image_url,
+                    "status": message_obj.status  # 읽음 처리 된 상태를 반환
+                }
             )
         except Exception as e:
             logger.error("예외 발생: %s", e, exc_info=True)
@@ -122,5 +132,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return Alert.objects.create(chatroom_id=self.chatroom_id, text="상대방이 채팅에서 나갔습니다.")
 
     @database_sync_to_async
-    def save_chat_message(self, message: str, sender: str, chatroom_id: int, image):
-        return Message.objects.create(chatroom_id=chatroom_id, sender=sender, text=message, image=image)
+    def save_chat_message(self, message: str, sender: str, chatroom_id: int, **kwargs):
+        return Message.objects.create(chatroom_id=chatroom_id, sender=sender, text=message, **kwargs)
+
+    @database_sync_to_async
+    def update_message_status(self, message_id, user_id):
+        message = Message.objects.get(id=message_id)
+        if message.sender_id != user_id:
+            message.status = False
+            message.save()
+            message.refresh_from_db()
+            return message
+        return message
