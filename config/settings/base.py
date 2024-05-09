@@ -65,6 +65,7 @@ CUSTOM_USER_APPS = [
     # "allauth.socialaccount.providers.naver",
     # "allauth.socialaccount.providers.kakao",
     "django_cleanup.apps.CleanupConfig",
+    "corsheaders",
     "apps.user",
     "apps.category",
     "apps.product",
@@ -81,6 +82,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
 
@@ -157,6 +159,11 @@ STATIC_ROOT = BASE_DIR / "static"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "user.Account"
+
+# cors 관련 설정
+CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
+# CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 # drf 관련 설정
 REST_FRAMEWORK = {
@@ -250,32 +257,33 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-# django-allauth 관련 설정
 SITE_ID = 1
-REST_USE_JWT = True  # TODO: 없어도 됨?
+# REST_USE_JWT = True  # TODO
+
+# django-allauth 관련 설정
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # default: "none", optional
+ACCOUNT_EMAIL_VERIFICATION = "optional"  # default: "none", mandatory
 # 필수 아님
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_ADAPTER = "apps.user.adapters.CustomAccountAdapter"
-# 이메일 인증
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # 사용자가 받은 링크를 클릭하면 회원가입 완료됨
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # default 3
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = None
+
+# django 이메일 인증 설정
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# django SMTP 설정
-EMAIL_HOST = "smtp.gmail.com"  # 메일 호스트 서버
-EMAIL_PORT = "587"  # gmail과 통신하는 포트
-EMAIL_HOST_USER = "empt311@gmail.com"  # 발신할 이메일
-EMAIL_HOST_PASSWORD = "zjokrauqcvpwfodv"
-EMAIL_USE_TLS = True  # TLS 보안 방법
+EMAIL_HOST = env("EMAIL_HOST")  # 메일 호스트 서버
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")  # 발신 이메일
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = True  # TLS 보안
+EMAIL_USE_SSL = False  # TODO
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-# URL_FRONT = env("URL_FRONT")
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # 유저가 받은 링크를 클릭하면 회원가입 완료되게끔
-EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
-
+# URL_FRONT = env("URL_FRONT")  # TODO 이건 어디서 나온 설정인지?
+# EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
 
 # TODO
 # AUTHENTICATION_BACKENDS = [
