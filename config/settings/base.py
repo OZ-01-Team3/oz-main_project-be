@@ -161,8 +161,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "user.Account"
 
 # cors 관련 설정
-CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
-# CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 # drf 관련 설정
@@ -320,9 +320,9 @@ REST_AUTH = {
     'JWT_AUTH_REFRESH_COOKIE': "rf",  # default: None
     'JWT_AUTH_REFRESH_COOKIE_PATH': '/',
     'JWT_AUTH_SECURE': False,
-    'JWT_AUTH_HTTPONLY': True,  # default: False
-    'JWT_AUTH_SAMESITE': 'Lax',
+    'JWT_AUTH_HTTPONLY': False,  # default: False
+    'JWT_AUTH_SAMESITE': None,
     'JWT_AUTH_RETURN_EXPIRATION': False,
-    'JWT_AUTH_COOKIE_USE_CSRF': True,  # default: False
+    'JWT_AUTH_COOKIE_USE_CSRF': False,  # default: False
     'JWT_AUTH_COOKIE_ENFORCE_CSRF_ON_UNAUTHENTICATED': False,
 }

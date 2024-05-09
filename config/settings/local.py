@@ -25,10 +25,10 @@ DATABASES = {
 }
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(env('REDIS_HOST'), 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(env("REDIS_HOST"), 6379)],
         },
     },
 }
@@ -42,7 +42,7 @@ CHANNEL_LAYERS = {
 #         },
 #     }
 # }
-
+CSRF_TRUSTED_ORIGINS = ['*']
 log_file_path = os.path.join(BASE_DIR, "logs", "django.log")
 LOGGING = {
     "version": 1,

@@ -2,6 +2,7 @@ from django.db import models
 
 from apps.user.models import Account
 from apps.common.utils import uuid4_generator
+from apps.product.models import Product
 
 
 def upload_to_s3_chat(instance: models.Model, filename: str) -> str:
@@ -12,6 +13,7 @@ def upload_to_s3_chat(instance: models.Model, filename: str) -> str:
 class Chatroom(models.Model):
     borrower = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="borrower")
     lender = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="lender")
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     borrower_status = models.BooleanField(default=True)
     lender_status = models.BooleanField(default=True)
 
@@ -24,6 +26,7 @@ class Message(models.Model):
     sender = models.ForeignKey(Account, on_delete=models.CASCADE)
     text = models.TextField()
     image = models.ImageField(upload_to=upload_to_s3_chat, null=True, blank=True)
+    status = models.BooleanField(default=True) # 메시지의 읽음 여부를 처리
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

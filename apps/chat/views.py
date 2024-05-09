@@ -1,6 +1,6 @@
-from typing import Any
-
+from django.shortcuts import render
 from drf_spectacular.utils import extend_schema
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,8 +14,22 @@ from apps.chat.utils import (
     delete_chatroom,
 )
 
+def render_chat(request):
+    return render(request, "chat_test.html")
 
 class ChatRoomView(APIView):
+    @extend_schema(
+        request=serializers.ChatroomListSerializer,
+        responses=serializers.ChatroomListSerializer,
+        description="유저가 참여한 채팅방 리스트를 내려주는 get메서드"
+    )
+    def get(self, request: Request) -> Response:
+        chatroom_list = Chatroom.objects.filter(Q(lender=request.user) | Q(borrower=request.user))
+        if chatroom_list:
+            serializer = serializers.ChatroomListSerializer(chatroom_list, context=request, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"msg": "참여 중인 채팅방을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
     @extend_schema(
         request=serializers.CreateChatroomSerializer,
         description="""
@@ -32,9 +46,9 @@ class ChatRoomView(APIView):
 
 class ChatDetailView(APIView):
     @extend_schema(
-        responses=serializers.MessageSerializer,
+        responses=serializers.EnterChatroomSerializer,
         description="""
-        채팅방에 해당하는 채팅 메시지를 내려주는 get 메서드
+        채팅방에 입장시 채팅방의 메시지를 내려주고, 상품에 대한 정보를 내려줌
         """,
     )
     def get(self, request: Request, chatroom_id: int) -> Response:
@@ -44,8 +58,7 @@ class ChatDetailView(APIView):
                 return Response(
                     {"msg": "이미 나간 채팅방이거나 접근할 수 없는 채팅방입니다."}, status=status.HTTP_400_BAD_REQUEST
                 )
-            messages = Message.objects.filter(chatroom=chatroom)
-            serializer = serializers.MessageSerializer(messages, many=True)
+            serializer = serializers.EnterChatroomSerializer(chatroom)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Chatroom.DoesNotExist:
             return Response({"msg": "해당 채팅방이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
