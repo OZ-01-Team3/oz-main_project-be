@@ -1,6 +1,40 @@
+from django.db.models import Q
 from rest_framework import serializers
 
 from apps.chat.models import Alert, Chatroom, Message
+
+
+class ChatroomListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chatroom
+        exclude = ["borrower", "lender", "borrower_status", "lender_status"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        user = self.context.user
+        if user == instance.lender:
+            user_data = {
+                'nickname': instance.borrower.nickname,
+            }
+            if instance.borrower.profile_img:
+                user_data['profile_img'] = instance.borrower.profile_img.url
+            data['user_info'] = user_data
+
+        if user == instance.borrower:
+            user_data = {
+                'nickname': instance.lender.nickname,
+            }
+            if instance.lender.profile_img:
+                user_data['profile_img'] = instance.lender.profile_img.url
+            data['user_info'] = user_data
+
+        if instance.product:
+            data['product_image'] = instance.product.image.url
+
+        last_message = Message.objects.filter(chatroom=instance).order_by('-timestamp').first()
+        if last_message:
+            data['last_message'] = MessageSerializer(last_message).data
+        return data
 
 
 class CreateChatroomSerializer(serializers.ModelSerializer[Chatroom]):
@@ -11,8 +45,35 @@ class CreateChatroomSerializer(serializers.ModelSerializer[Chatroom]):
 
 
 class MessageSerializer(serializers.ModelSerializer[Message]):
-    sender_nickname = serializers.CharField(source="sender.nickname", read_only=True)
+    nickname = serializers.CharField(source="sender.nickname", read_only=True)
 
     class Meta:
         model = Message
         exclude = ["sender"]
+
+
+class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
+    # product_image = serializers.RelatedField(source="product.images", read_only=True)
+    # product_name = serializers.CharField(source="product.name", read_only=True)
+    # product_rental_fee = serializers.CharField(source="product.rental_fee")
+    # product_condition = serializers.CharField(source="product.condition", read_only=True)
+
+    class Meta:
+        model = Chatroom
+        fields = ["product",]
+        # fields = ["product", "product_image", "product_name", "product_rental_fee", "product_condition"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        messages = Message.objects.filter(chatroom=instance)
+
+        if messages:
+            # bulk_update 메서드를 사용하여 한 번에 여러 개체를 업데이트, 안읽은 메시지들을 읽음처리
+            filter_condition = Q(status=True, id__in=messages.values_list('id', flat=True))
+            Message.objects.filter(filter_condition).update(status=False)
+            # 업데이트된 메시지를 다시 가져와서 시리얼라이저로 직렬화
+            messages = Message.objects.filter(chatroom=instance)
+            serializer = MessageSerializer(messages, many=True)
+            data["messages"] = serializer.data
+
+        return data
