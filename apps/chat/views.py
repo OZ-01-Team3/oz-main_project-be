@@ -1,6 +1,6 @@
+from django.db.models import Q
 from django.shortcuts import render
 from drf_spectacular.utils import extend_schema
-from django.db.models import Q
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,14 +14,16 @@ from apps.chat.utils import (
     delete_chatroom,
 )
 
+
 def render_chat(request):
     return render(request, "chat_test.html")
+
 
 class ChatRoomView(APIView):
     @extend_schema(
         request=serializers.ChatroomListSerializer,
         responses=serializers.ChatroomListSerializer,
-        description="유저가 참여한 채팅방 리스트를 내려주는 get메서드"
+        description="유저가 참여한 채팅방 리스트를 내려주는 get메서드",
     )
     def get(self, request: Request) -> Response:
         chatroom_list = Chatroom.objects.filter(Q(lender=request.user) | Q(borrower=request.user))
