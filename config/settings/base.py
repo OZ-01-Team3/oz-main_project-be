@@ -294,6 +294,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # dj-rest-auth 관련 설정
 REST_AUTH = {
     'LOGIN_SERIALIZER': 'dj_rest_auth.serializers.LoginSerializer',
+    # 'LOGIN_SERIALIZER': 'apps.user.serializers.CustomLoginSerializer',
     'TOKEN_SERIALIZER': 'dj_rest_auth.serializers.TokenSerializer',
     'JWT_SERIALIZER': 'dj_rest_auth.serializers.JWTSerializer',
     'JWT_SERIALIZER_WITH_EXPIRATION': 'dj_rest_auth.serializers.JWTSerializerWithExpiration',
