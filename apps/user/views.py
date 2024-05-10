@@ -1,4 +1,5 @@
 from allauth.account import app_settings
+from django.shortcuts import render
 from allauth.account.models import (
     EmailConfirmation,
     EmailConfirmationHMAC,
@@ -17,6 +18,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from allauth.account import app_settings as allauth_account_settings
+from allauth.account import app_settings as allauth_settings
 
 from apps.user.models import Account
 from config.settings.base import env
@@ -34,12 +36,10 @@ class CustomSignupView(RegisterView):
         user = self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         data = self.get_response_data(user)
-        print("===", data)
         res = {
             'access': data["access"],
             'refresh': data["refresh"],
         }
-
         if res:
             response = Response(
                 res,
@@ -48,27 +48,29 @@ class CustomSignupView(RegisterView):
             )
         else:
             response = Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
-
         return response
 
 
 class CustomConfirmEmailView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, *args, **kwargs) -> Response:
+    def get(self, request, *args, **kwargs) -> Response:
         try:
             self.object = self.get_object()
             # if app_settings.CONFIRM_EMAIL_ON_GET:
-            return self.post(*args, **kwargs)
+            return self.post(request, *args, **kwargs)
         except Http404:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            # return Response(status=status.HTTP_404_NOT_FOUND)
+            return render(request, "account/email/confirm-fail.html")
 
     def post(self, request, *args, **kwargs) -> Response:
         self.object = confirmation = self.get_object()
         email_address = confirmation.confirm(self.request)
         if not email_address:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(status=status.HTTP_200_OK)
+        #     return Response(status=status.HTTP_404_NOT_FOUND)
+            return render(request, "account/email/confirm-fail.html")
+        # return Response(status=status.HTTP_200_OK)
+        return render(request, "account/email/confirm-success.html")
 
     def get_object(self, queryset=None) -> EmailConfirmationHMAC | None:
         key = self.kwargs["key"]
