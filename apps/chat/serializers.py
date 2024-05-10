@@ -1,17 +1,20 @@
+from typing import Any, Dict
+
 from django.db.models import Q
 from rest_framework import serializers
 
 from apps.chat.models import Alert, Chatroom, Message
+from apps.product.models import ProductImage
 
 
-class ChatroomListSerializer(serializers.ModelSerializer):
+class ChatroomListSerializer(serializers.ModelSerializer[Chatroom]):
     class Meta:
         model = Chatroom
         exclude = ["borrower", "lender", "borrower_status", "lender_status"]
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Chatroom) -> Dict[str, Any]:
         data = super().to_representation(instance)
-        user = self.context.user
+        user = self.context.get("user")
         if user == instance.lender:
             user_data = {
                 "nickname": instance.borrower.nickname,
@@ -29,7 +32,9 @@ class ChatroomListSerializer(serializers.ModelSerializer):
             data["user_info"] = user_data
 
         if instance.product:
-            data["product_image"] = instance.product.image.url
+            product_image = ProductImage.objects.filter(product=instance.product).first()
+            if product_image:
+                data["product_image"] = product_image.image.url
 
         last_message = Message.objects.filter(chatroom=instance).order_by("-timestamp").first()
         if last_message:
@@ -65,7 +70,7 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
         ]
         # fields = ["product", "product_image", "product_name", "product_rental_fee", "product_condition"]
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Chatroom) -> Dict[str, Any]:
         data = super().to_representation(instance)
         messages = Message.objects.filter(chatroom=instance)
 

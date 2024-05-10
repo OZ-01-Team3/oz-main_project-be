@@ -10,7 +10,7 @@ from apps.common.utils import uuid4_generator
 
 
 class AccountManager(BaseUserManager["Account"]):
-    def create_user(self, email: str, password: str, **extra_fields: dict[str, Any]) -> Any:
+    def create_user(self, email: str, password: str, **extra_fields: Any) -> Any:
         if not email:
             raise ValueError("Users must have an email address")
         email = self.normalize_email(email)

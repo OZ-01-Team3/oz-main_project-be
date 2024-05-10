@@ -35,7 +35,7 @@ from config.settings.base import env
 #     client_class = OAuth2Client
 
 
-class CustomSignupView(RegisterView):
+class CustomSignupView(RegisterView):  # type: ignore
     def create(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -57,7 +57,7 @@ class CustomSignupView(RegisterView):
         return response
 
 
-class CustomLoginView(LoginView):
+class CustomLoginView(LoginView):  # type: ignore
     def get_response(self) -> Response:
         serializer_class = self.get_response_serializer()
 
@@ -119,7 +119,7 @@ class CustomConfirmEmailView(APIView):
 
     def post(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> HttpResponse:
         self.object = confirmation = self.get_object()
-        email_address = confirmation.confirm(
+        email_address = confirmation.confirm(  # type: ignore
             request
         )  # EmailAddress 테이블에서 varified True로 변경하고 email 반환, 이미 True인 경우 None 반환
         if not email_address:
