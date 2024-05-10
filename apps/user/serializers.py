@@ -6,7 +6,7 @@ from apps.user.models import Account
 from config.settings import settings
 
 
-class SignupSerializer(RegisterSerializer):
+class SignupSerializer(RegisterSerializer):  # type: ignore
     nickname = serializers.CharField()
     phone = serializers.CharField()
 
@@ -20,7 +20,7 @@ class SignupSerializer(RegisterSerializer):
         return nickname
 
 
-class UserInfoSerializer(UserDetailsSerializer):
+class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
     password1 = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
     nickname = serializers.CharField()
