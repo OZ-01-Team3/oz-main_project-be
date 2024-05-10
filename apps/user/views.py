@@ -117,7 +117,7 @@ class CustomConfirmEmailView(APIView):
 
     def post(self, request, *args, **kwargs) -> Response:
         self.object = confirmation = self.get_object()
-        email_address = confirmation.confirm(self.request)
+        email_address = confirmation.confirm(self.request)  # EmailAddress 테이블에서 varified True로 변경하고 email 반환, 이미 True인 경우 None 반환
         if not email_address:
         #     return Response(status=status.HTTP_404_NOT_FOUND)
             return render(request, "account/email/confirm-fail.html")
@@ -125,6 +125,10 @@ class CustomConfirmEmailView(APIView):
         return render(request, "account/email/confirm-success.html")
 
     def get_object(self, queryset=None) -> EmailConfirmationHMAC | None:
+        """
+        get_emailconfirmation_model() -> EmailConfirmation 모델 반환
+        from_key() -> url에 있는 인증키로 인증 시도. 잘못된 key이거나 이미 인증된 key일 경우 None 반환
+        """
         key = self.kwargs["key"]
         model = get_emailconfirmation_model()
         email_confirmation = model.from_key(key)

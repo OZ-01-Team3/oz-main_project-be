@@ -1,7 +1,7 @@
 from allauth.account.views import ConfirmEmailView
 from dj_rest_auth.registration.views import VerifyEmailView
 from dj_rest_auth.views import PasswordResetView, PasswordResetConfirmView, LogoutView, UserDetailsView, \
-    PasswordChangeView
+    PasswordChangeView, LoginView
 from django.urls import include, path, re_path
 
 from apps.user.views import CustomConfirmEmailView, CustomSignupView, CustomLoginView
