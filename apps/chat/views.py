@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -15,7 +16,7 @@ from apps.chat.utils import (
 )
 
 
-def render_chat(request):
+def render_chat(request: HttpRequest) -> HttpResponse:
     return render(request, "chat_test.html")
 
 
@@ -28,7 +29,7 @@ class ChatRoomView(APIView):
     def get(self, request: Request) -> Response:
         chatroom_list = Chatroom.objects.filter(Q(lender=request.user) | Q(borrower=request.user))
         if chatroom_list:
-            serializer = serializers.ChatroomListSerializer(chatroom_list, context=request, many=True)
+            serializer = serializers.ChatroomListSerializer(chatroom_list, context={"user": request.user}, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response({"msg": "참여 중인 채팅방을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
