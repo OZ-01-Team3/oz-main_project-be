@@ -7,7 +7,8 @@ from allauth.account.models import (
 from allauth.account.views import ConfirmEmailView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from dj_rest_auth.registration.views import SocialLoginView
+from dj_rest_auth.app_settings import api_settings
+from dj_rest_auth.registration.views import SocialLoginView, RegisterView
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from rest_framework import status
@@ -15,6 +16,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from allauth.account import app_settings as allauth_account_settings
 
 from apps.user.models import Account
 from config.settings.base import env
@@ -25,22 +27,47 @@ from config.settings.base import env
 #     client_class = OAuth2Client
 
 
+class CustomSignupView(RegisterView):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        data = self.get_response_data(user)
+        print("===", data)
+        res = {
+            'access': data["access"],
+            'refresh': data["refresh"],
+        }
+
+        if res:
+            response = Response(
+                res,
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
+        else:
+            response = Response(status=status.HTTP_204_NO_CONTENT, headers=headers)
+
+        return response
+
+
 class CustomConfirmEmailView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, *args, **kwargs) -> Response:
         try:
             self.object = self.get_object()
-            if app_settings.CONFIRM_EMAIL_ON_GET:
-                return self.post(*args, **kwargs)
+            # if app_settings.CONFIRM_EMAIL_ON_GET:
+            return self.post(*args, **kwargs)
         except Http404:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, *args, **kwargs) -> Response:
         self.object = confirmation = self.get_object()
         email_address = confirmation.confirm(self.request)
         if not email_address:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_200_OK)
 
     def get_object(self, queryset=None) -> EmailConfirmationHMAC | None:

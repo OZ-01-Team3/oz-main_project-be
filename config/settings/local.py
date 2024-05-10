@@ -42,7 +42,8 @@ CHANNEL_LAYERS = {
 #         },
 #     }
 # }
-CSRF_TRUSTED_ORIGINS = ['*']
+CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
+
 log_file_path = os.path.join(BASE_DIR, "logs", "django.log")
 LOGGING = {
     "version": 1,
