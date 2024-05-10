@@ -1,5 +1,7 @@
 import uuid
+
 from django.db import models
+
 from apps.common.models import BaseModel
 from apps.common.utils import uuid4_generator
 
@@ -8,18 +10,17 @@ class Product(BaseModel):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     user = models.ForeignKey("user.Account", on_delete=models.CASCADE)
-    #brand = models.ForeignKey(on_delete=models.SET_NULL, null=True)  # 브랜드
+    # brand = models.ForeignKey(on_delete=models.SET_NULL, null=True)  # 브랜드
     condition = models.TextField()  # 옷 상태
     purchasing_price = models.IntegerField()  # 구매 당시 가격
     rental_fee = models.IntegerField()  # 대여 비용
     size = models.CharField(max_length=10)  # 사이즈
     views = models.IntegerField(default=0)  # 조회수
-    #product_category_id = models.ForeignKey()
-    #style_category_id = models.ManyToManyField()
+    # product_category_id = models.ForeignKey()
+    # style_category_id = models.ManyToManyField()
     status = models.BooleanField(default=True)  # 대여 가능 여부
 
-
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 

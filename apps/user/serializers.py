@@ -1,6 +1,6 @@
 from dj_rest_auth.registration.serializers import RegisterSerializer
-from dj_rest_auth.serializers import UserDetailsSerializer, LoginSerializer
-from rest_framework import serializers, exceptions
+from dj_rest_auth.serializers import LoginSerializer, UserDetailsSerializer
+from rest_framework import exceptions, serializers
 
 from apps.user.models import Account
 from config.settings import settings
@@ -14,7 +14,7 @@ class SignupSerializer(RegisterSerializer):
         model = Account
         fields = ("email", "password1", "password2", "nickname", "phone")
 
-    def validate_nickname(self, nickname):
+    def validate_nickname(self, nickname: str) -> str:
         if Account.objects.filter(nickname=nickname).exists():
             raise serializers.ValidationError("This nickname is already in use.")
         return nickname
@@ -35,7 +35,7 @@ class UserInfoSerializer(UserDetailsSerializer):
         model = Account
         fields = ("email", "password1", "password2", "nickname", "phone", "age", "gender", "height", "region", "grade")
 
-    def validate_nickname(self, nickname):
+    def validate_nickname(self, nickname: str) -> str:
         account_id = self.context["request"].user.id
         if Account.objects.filter(nickname=nickname).exclude(id=account_id).exists():
             raise serializers.ValidationError("This nickname is already in use.")

@@ -14,26 +14,26 @@ class ChatroomListSerializer(serializers.ModelSerializer):
         user = self.context.user
         if user == instance.lender:
             user_data = {
-                'nickname': instance.borrower.nickname,
+                "nickname": instance.borrower.nickname,
             }
             if instance.borrower.profile_img:
-                user_data['profile_img'] = instance.borrower.profile_img.url
-            data['user_info'] = user_data
+                user_data["profile_img"] = instance.borrower.profile_img.url
+            data["user_info"] = user_data
 
         if user == instance.borrower:
             user_data = {
-                'nickname': instance.lender.nickname,
+                "nickname": instance.lender.nickname,
             }
             if instance.lender.profile_img:
-                user_data['profile_img'] = instance.lender.profile_img.url
-            data['user_info'] = user_data
+                user_data["profile_img"] = instance.lender.profile_img.url
+            data["user_info"] = user_data
 
         if instance.product:
-            data['product_image'] = instance.product.image.url
+            data["product_image"] = instance.product.image.url
 
-        last_message = Message.objects.filter(chatroom=instance).order_by('-timestamp').first()
+        last_message = Message.objects.filter(chatroom=instance).order_by("-timestamp").first()
         if last_message:
-            data['last_message'] = MessageSerializer(last_message).data
+            data["last_message"] = MessageSerializer(last_message).data
         return data
 
 
@@ -60,7 +60,9 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
 
     class Meta:
         model = Chatroom
-        fields = ["product",]
+        fields = [
+            "product",
+        ]
         # fields = ["product", "product_image", "product_name", "product_rental_fee", "product_condition"]
 
     def to_representation(self, instance):
@@ -69,7 +71,7 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
 
         if messages:
             # bulk_update 메서드를 사용하여 한 번에 여러 개체를 업데이트, 안읽은 메시지들을 읽음처리
-            filter_condition = Q(status=True, id__in=messages.values_list('id', flat=True))
+            filter_condition = Q(status=True, id__in=messages.values_list("id", flat=True))
             Message.objects.filter(filter_condition).update(status=False)
             # 업데이트된 메시지를 다시 가져와서 시리얼라이저로 직렬화
             messages = Message.objects.filter(chatroom=instance)

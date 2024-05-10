@@ -4,9 +4,10 @@ import logging
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.core.files.base import ContentFile
-from apps.user.models import Account
-from apps.chat.models import Message, Chatroom, Alert
+
+from apps.chat.models import Alert, Chatroom, Message
 from apps.chat.serializers import MessageSerializer
+from apps.user.models import Account
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +45,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             # 이메일로 유저를 가져옴
             sender = await self.get_user(nickname=nickname)
 
-
             # 메시지를 데이터 베이스에 저장함
-            chat = await self.save_chat_message(
-                message=message, sender=sender, chatroom_id=self.chatroom_id
-            )
+            chat = await self.save_chat_message(message=message, sender=sender, chatroom_id=self.chatroom_id)
             if image:
                 image_data = self.decode_image(image)
                 chat.update(image=image_data)
@@ -94,7 +92,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     "message": message,
                     "nickname": nickname,
                     "image_url": image_url,
-                    "status": message_obj.status  # 읽음 처리 된 상태를 반환
+                    "status": message_obj.status,  # 읽음 처리 된 상태를 반환
                 }
             )
         except Exception as e:

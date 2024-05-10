@@ -2,8 +2,8 @@ from typing import Union
 
 from django.contrib.auth.models import AnonymousUser
 
-from apps.user.models import Account
 from apps.chat.models import Chatroom
+from apps.user.models import Account
 
 
 def check_entered_chatroom(chatroom: Chatroom, user: Union[Account, AnonymousUser]) -> bool:

@@ -1,8 +1,8 @@
+from typing import Any
+
 from allauth.account import app_settings
-from dj_rest_auth.models import get_token_model
-from dj_rest_auth.utils import jwt_encode
-from dj_rest_auth.views import LoginView
-from django.shortcuts import render
+from allauth.account import app_settings as allauth_account_settings
+from allauth.account import app_settings as allauth_settings
 from allauth.account.models import (
     EmailConfirmation,
     EmailConfirmationHMAC,
@@ -12,20 +12,22 @@ from allauth.account.views import ConfirmEmailView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.app_settings import api_settings
-from dj_rest_auth.registration.views import SocialLoginView, RegisterView
-from django.http import Http404, HttpResponseRedirect
+from dj_rest_auth.models import get_token_model
+from dj_rest_auth.registration.views import RegisterView, SocialLoginView
+from dj_rest_auth.utils import jwt_encode
+from dj_rest_auth.views import LoginView
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from allauth.account import app_settings as allauth_account_settings
-from allauth.account import app_settings as allauth_settings
 
 from apps.user.models import Account
 from config.settings.base import env
-from django.utils import timezone
 
 # class GoogleLogin(SocialLoginView):
 #     adapter_class = GoogleOAuth2Adapter
@@ -34,15 +36,15 @@ from django.utils import timezone
 
 
 class CustomSignupView(RegisterView):
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         data = self.get_response_data(user)
         res = {
-            'access': data["access"],
-            'refresh': data["refresh"],
+            "access": data["access"],
+            "refresh": data["refresh"],
         }
         if res:
             response = Response(
@@ -56,31 +58,30 @@ class CustomSignupView(RegisterView):
 
 
 class CustomLoginView(LoginView):
-    def get_response(self):
+    def get_response(self) -> Response:
         serializer_class = self.get_response_serializer()
 
         if api_settings.USE_JWT:
-            from rest_framework_simplejwt.settings import (
-                api_settings as jwt_settings,
-            )
-            access_token_expiration = (timezone.now() + jwt_settings.ACCESS_TOKEN_LIFETIME)
-            refresh_token_expiration = (timezone.now() + jwt_settings.REFRESH_TOKEN_LIFETIME)
+            from rest_framework_simplejwt.settings import api_settings as jwt_settings
+
+            access_token_expiration = timezone.now() + jwt_settings.ACCESS_TOKEN_LIFETIME
+            refresh_token_expiration = timezone.now() + jwt_settings.REFRESH_TOKEN_LIFETIME
             return_expiration_times = api_settings.JWT_AUTH_RETURN_EXPIRATION
             auth_httponly = api_settings.JWT_AUTH_HTTPONLY
 
             data = {
-                'user': self.user,
-                'access': self.access_token,
+                "user": self.user,
+                "access": self.access_token,
             }
 
             if not auth_httponly:
-                data['refresh'] = self.refresh_token
+                data["refresh"] = self.refresh_token
             else:
-                data['refresh'] = ""
+                data["refresh"] = ""
 
             if return_expiration_times:
-                data['access_expiration'] = access_token_expiration
-                data['refresh_expiration'] = refresh_token_expiration
+                data["access_expiration"] = access_token_expiration
+                data["refresh_expiration"] = refresh_token_expiration
 
             serializer = serializer_class(
                 instance=data,
@@ -99,6 +100,7 @@ class CustomLoginView(LoginView):
         response = Response(data, status=status.HTTP_200_OK)
         if api_settings.USE_JWT:
             from dj_rest_auth.jwt_auth import set_jwt_cookies
+
             set_jwt_cookies(response, self.access_token, self.refresh_token)
         return response
 
@@ -106,7 +108,7 @@ class CustomLoginView(LoginView):
 class CustomConfirmEmailView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request, *args, **kwargs) -> Response:
+    def get(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> HttpResponse:
         try:
             self.object = self.get_object()
             # if app_settings.CONFIRM_EMAIL_ON_GET:
@@ -115,20 +117,18 @@ class CustomConfirmEmailView(APIView):
             # return Response(status=status.HTTP_404_NOT_FOUND)
             return render(request, "account/email/confirm-fail.html")
 
-    def post(self, request, *args, **kwargs) -> Response:
+    def post(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> HttpResponse:
         self.object = confirmation = self.get_object()
-        email_address = confirmation.confirm(self.request)  # EmailAddress 테이블에서 varified True로 변경하고 email 반환, 이미 True인 경우 None 반환
+        email_address = confirmation.confirm(
+            request
+        )  # EmailAddress 테이블에서 varified True로 변경하고 email 반환, 이미 True인 경우 None 반환
         if not email_address:
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
+            #     return Response(status=status.HTTP_404_NOT_FOUND)
             return render(request, "account/email/confirm-fail.html")
         # return Response(status=status.HTTP_200_OK)
         return render(request, "account/email/confirm-success.html")
 
-    def get_object(self, queryset=None) -> EmailConfirmationHMAC | None:
-        """
-        get_emailconfirmation_model() -> EmailConfirmation 모델 반환
-        from_key() -> url에 있는 인증키로 인증 시도. 잘못된 key이거나 이미 인증된 key일 경우 None 반환
-        """
+    def get_object(self, queryset: Any = None) -> EmailConfirmationHMAC | None:
         key = self.kwargs["key"]
         model = get_emailconfirmation_model()
         email_confirmation = model.from_key(key)

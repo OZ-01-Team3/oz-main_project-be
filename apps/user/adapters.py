@@ -11,7 +11,7 @@ from apps.user.models import Account
 from config.settings.base import env
 
 
-class CustomAccountAdapter(DefaultAccountAdapter):
+class CustomAccountAdapter(DefaultAccountAdapter):  # type: ignore
     def save_user(self, request: Request, user: Any, form: Any, commit: bool = True) -> Any:
         account = super().save_user(request, user, form, False)
         user_field(account, "nickname", request.data.get("nickname"))
@@ -24,7 +24,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             raise ValidationError("This account is already registered.")
         return email
 
-    def get_email_confirmation_url(self, request, emailconfirmation):
+    def get_email_confirmation_url(self, request: Request, emailconfirmation: Any) -> Any:
         """
         이메일 확인 링크 커스텀
         """

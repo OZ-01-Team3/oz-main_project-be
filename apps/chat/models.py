@@ -1,8 +1,8 @@
 from django.db import models
 
-from apps.user.models import Account
 from apps.common.utils import uuid4_generator
 from apps.product.models import Product
+from apps.user.models import Account
 
 
 def upload_to_s3_chat(instance: models.Model, filename: str) -> str:
@@ -26,7 +26,7 @@ class Message(models.Model):
     sender = models.ForeignKey(Account, on_delete=models.CASCADE)
     text = models.TextField()
     image = models.ImageField(upload_to=upload_to_s3_chat, null=True, blank=True)
-    status = models.BooleanField(default=True) # 메시지의 읽음 여부를 처리
+    status = models.BooleanField(default=True)  # 메시지의 읽음 여부를 처리
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
