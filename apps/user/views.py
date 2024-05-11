@@ -27,6 +27,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.user.models import Account
+
 # from config.settings.settings import GOOGLE_OAUTH2_URL
 
 # class GoogleLogin(SocialLoginView):

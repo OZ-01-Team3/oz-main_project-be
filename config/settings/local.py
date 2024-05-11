@@ -1,4 +1,5 @@
-# import os
+import os
+
 import environ
 
 from .base import *
@@ -30,7 +31,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(env("REDIS_HOST"), 6379)],
+            "hosts": [(env("REDIS_HOST"), env("REDIS_PORT"))],
         },
     },
 }
@@ -45,7 +46,7 @@ CHANNEL_LAYERS = {
 #     }
 # }
 
-CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
 
 # S3 관련 설정
 STORAGES = {
@@ -80,6 +81,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
 
 
+# django logging 설정
 log_file_path = os.path.join(BASE_DIR, "logs", "django.log")
 LOGGING = {
     "version": 1,
@@ -142,3 +144,7 @@ LOGGING = {
         },
     },
 }
+
+# 커스텀 설정  # TODO
+FRONT_CONFIRM_URL = env("FRONT_CONFIRM_URL")
+GOOGLE_OAUTH2_URL = env("GOOGLE_OAUTH2_URL")

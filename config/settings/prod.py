@@ -1,9 +1,9 @@
-from .base import *
 from tools.secrets import get_secret
 
+from .base import *
 
 DEBUG = True
-ENV = eval(get_secret())
+ENV: dict[str, str] = eval(get_secret())
 
 SECRET_KEY = ENV["DJANGO_SECRET_KEY"]
 ALLOWED_HOSTS = ENV["ALLOWED_HOSTS"].split(",")
@@ -28,7 +28,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(ENV["REDIS_HOST"], 6379)],
+            "hosts": [(ENV["REDIS_HOST"], ENV["REDIS_PORT"])],
         },
     },
 }
@@ -64,3 +64,7 @@ EMAIL_USE_SSL = False  # TODO
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # URL_FRONT = ENV["URL_FRONT"]  # TODO 이건 어디서 나온 설정인지?
 # EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
+
+# 커스텀 설정  # TODO
+FRONT_CONFIRM_URL = ENV["FRONT_CONFIRM_URL"]
+GOOGLE_OAUTH2_URL = ENV["GOOGLE_OAUTH2_URL"]
