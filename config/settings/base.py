@@ -179,7 +179,7 @@ REST_FRAMEWORK = {
 
 # drf-spectacular 관련 설정
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Coatry Closet",
+    "TITLE": "Coaty Closet",
     "DESCRIPTION": "Project Description",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
