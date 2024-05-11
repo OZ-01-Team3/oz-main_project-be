@@ -1,4 +1,5 @@
 from allauth.account.views import ConfirmEmailView
+from dj_rest_auth.jwt_auth import get_refresh_view
 from dj_rest_auth.registration.views import VerifyEmailView
 from dj_rest_auth.views import (
     LoginView,
@@ -9,6 +10,7 @@ from dj_rest_auth.views import (
     UserDetailsView,
 )
 from django.urls import include, path, re_path
+from rest_framework_simplejwt.views import TokenVerifyView
 
 from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignupView
 
@@ -26,6 +28,8 @@ urlpatterns = [
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="rest_logout"),
     path("user/", UserDetailsView.as_view(), name="rest_user_details"),
+    path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("token/refresh/", get_refresh_view().as_view(), name="token_refresh"),
     path("password/change/", PasswordChangeView.as_view(), name="rest_password_change"),
     # re_path(r'^account-confirm-email/(?P<key>[-:\\w]+)/$', ConfirmEmailView.as_view(), name='account_confirm_email'),
     re_path(r"^confirm-email/(?P<key>[-:\w]+)/$", CustomConfirmEmailView.as_view(), name="account_confirm_email"),

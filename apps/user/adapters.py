@@ -8,7 +8,7 @@ from requests import Request
 from rest_framework.exceptions import ValidationError
 
 from apps.user.models import Account
-from config.settings.base import env
+from config.settings.settings import FRONT_CONFIRM_URL
 
 
 class CustomAccountAdapter(DefaultAccountAdapter):  # type: ignore
@@ -28,7 +28,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):  # type: ignore
         """
         이메일 확인 링크 커스텀
         """
-        url = env("FRONT_CONFIRM_URL") + emailconfirmation.key
+        url = FRONT_CONFIRM_URL + emailconfirmation.key
         return url
 
 
