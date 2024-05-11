@@ -1,9 +1,11 @@
+from ast import literal_eval
+
 from tools.secrets import get_secret
 
 from .base import *
 
 DEBUG = True
-ENV: dict[str, str] = eval(get_secret())
+ENV: dict[str, str] = literal_eval(get_secret())
 
 SECRET_KEY = ENV["DJANGO_SECRET_KEY"]
 ALLOWED_HOSTS = ENV["ALLOWED_HOSTS"].split(",")
