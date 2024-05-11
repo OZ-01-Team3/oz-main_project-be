@@ -14,20 +14,22 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-import environ
+from config.settings import settings
+
+# import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-env = environ.Env(DEBUG=(bool, False))
+# env = environ.Env(DEBUG=(bool, False))
 # environ.Env.read_env(env_file=os.path.join(BASE_DIR / "env-be", ".env"))
-environ.Env.read_env(env_file=os.path.join(BASE_DIR, ".env"))
+# environ.Env.read_env(env_file=os.path.join(BASE_DIR, ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("DJANGO_SECRET_KEY")
+# SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -177,31 +179,31 @@ REST_FRAMEWORK = {
 
 # drf-spectacular 관련 설정
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Meojjang",
+    "TITLE": "Coatry Closet",
     "DESCRIPTION": "Project Description",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-# S3 관련 설정
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            # "session_profile": env("AWS_S3_SESSION_PROFILE"),
-            "access_key": env("AWS_ACCESS_KEY_ID"),
-            "secret_key": env("AWS_SECRET_ACCESS_KEY"),
-            "bucket_name": env("AWS_STORAGE_BUCKET_NAME"),
-            # "default_acl": env("AWS_DEFAULT_ACL"),
-            "region_name": env("AWS_S3_REGION_NAME"),
-            "use_ssl": env("AWS_S3_USE_SSL"),
-            "custom_domain": env("AWS_STORAGE_BUCKET_NAME") + ".s3.amazonaws.com",
-            # "cloudfront_key": env("AWS_CLOUDFRONT_KEY"),
-            # "cloudfront_key_id": env("AWS_CLOUDFRONT_KEY_ID")
-        },
-    },
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
-}
+# # S3 관련 설정
+# STORAGES = {
+#     "default": {
+#         "BACKEND": "storages.backends.s3.S3Storage",
+#         "OPTIONS": {
+#             # "session_profile": env("AWS_S3_SESSION_PROFILE"),
+#             "access_key": env("AWS_ACCESS_KEY_ID"),
+#             "secret_key": env("AWS_SECRET_ACCESS_KEY"),
+#             "bucket_name": env("AWS_STORAGE_BUCKET_NAME"),
+#             # "default_acl": env("AWS_DEFAULT_ACL"),
+#             "region_name": env("AWS_S3_REGION_NAME"),
+#             "use_ssl": env("AWS_S3_USE_SSL"),
+#             "custom_domain": env("AWS_STORAGE_BUCKET_NAME") + ".s3.amazonaws.com",
+#             # "cloudfront_key": env("AWS_CLOUDFRONT_KEY"),
+#             # "cloudfront_key_id": env("AWS_CLOUDFRONT_KEY_ID")
+#         },
+#     },
+#     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+# }
 
 # STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 # DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
@@ -223,7 +225,7 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,  # default: False
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
+    # "SIGNING_KEY": SECRET_KEY,
     "VERIFYING_KEY": "",
     "AUDIENCE": None,
     "ISSUER": None,
@@ -266,17 +268,17 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # 사용자가 받은 링크를 클릭하�
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # default 3
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = None
 
-# django 이메일 인증 설정
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = env("EMAIL_HOST")  # 메일 호스트 서버
-EMAIL_PORT = env("EMAIL_PORT")
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")  # 발신 이메일
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = True  # TLS 보안
-EMAIL_USE_SSL = False  # TODO
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-# URL_FRONT = env("URL_FRONT")  # TODO 이건 어디서 나온 설정인지?
-# EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
+# # django 이메일 인증 설정
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = env("EMAIL_HOST")  # 메일 호스트 서버
+# EMAIL_PORT = env("EMAIL_PORT")
+# EMAIL_HOST_USER = env("EMAIL_HOST_USER")  # 발신 이메일
+# EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+# EMAIL_USE_TLS = True  # TLS 보안
+# EMAIL_USE_SSL = False  # TODO
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# # URL_FRONT = env("URL_FRONT")  # TODO 이건 어디서 나온 설정인지?
+# # EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
 
 # TODO
 # AUTHENTICATION_BACKENDS = [

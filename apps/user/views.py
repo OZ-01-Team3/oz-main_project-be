@@ -27,11 +27,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.user.models import Account
-from config.settings.base import env
+# from config.settings.settings import GOOGLE_OAUTH2_URL
 
 # class GoogleLogin(SocialLoginView):
 #     adapter_class = GoogleOAuth2Adapter
-#     callback_url = env("GOOGLE_OAUTH2_URL")
+#     callback_url = "GOOGLE_OAUTH2_URL"
 #     client_class = OAuth2Client
 
 
@@ -129,6 +129,10 @@ class CustomConfirmEmailView(APIView):
         return render(request, "account/email/confirm-success.html")
 
     def get_object(self, queryset: Any = None) -> EmailConfirmationHMAC | None:
+        """
+        get_emailconfirmation_model() -> EmailConfirmation 모델 반환
+        from_key() -> url에 있는 인증키로 인증 시도. 잘못된 key이거나 이미 인증된 key일 경우 None 반환
+        """
         key = self.kwargs["key"]
         model = get_emailconfirmation_model()
         email_confirmation = model.from_key(key)

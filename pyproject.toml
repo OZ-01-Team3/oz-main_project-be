@@ -28,6 +28,7 @@ channels-redis = "^4.2.0"
 uvicorn = {extras = ["standard"], version = "^0.29.0"}
 cryptography = "^42.0.7"
 daphne = "^4.1.2"
+django-stubs-ext = "^5.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -38,7 +39,6 @@ django-stubs = "^5.0.0"
 coverage = "^7.5.0"
 django-debug-toolbar = "^4.3.0"
 ipython = "^8.24.0"
-django-stubs-ext = "^5.0.0"
 djangorestframework-stubs = "^3.15.0"
 
 [build-system]
