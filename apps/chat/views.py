@@ -61,7 +61,7 @@ class ChatDetailView(APIView):
                 return Response(
                     {"msg": "이미 나간 채팅방이거나 접근할 수 없는 채팅방입니다."}, status=status.HTTP_400_BAD_REQUEST
                 )
-            serializer = serializers.EnterChatroomSerializer(chatroom)
+            serializer = serializers.EnterChatroomSerializer(chatroom, context={"user": request.user})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Chatroom.DoesNotExist:
             return Response({"msg": "해당 채팅방이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
