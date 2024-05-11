@@ -34,6 +34,6 @@ class Message(models.Model):
 
 
 class Alert(models.Model):
-    chatroom_id = models.ForeignKey(Chatroom, on_delete=models.CASCADE)
+    chatroom = models.ForeignKey(Chatroom, on_delete=models.CASCADE)
     text = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
