@@ -12,7 +12,8 @@ from dj_rest_auth.views import (
 from django.urls import include, path, re_path
 from rest_framework_simplejwt.views import TokenVerifyView
 
-from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignupView
+from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignupView, EmailConfirmationView, \
+    EmailVerificationView
 
 # from apps.user.views import CustomConfirmEmailView
 
@@ -33,5 +34,7 @@ urlpatterns = [
     path("password/change/", PasswordChangeView.as_view(), name="rest_password_change"),
     # re_path(r'^account-confirm-email/(?P<key>[-:\\w]+)/$', ConfirmEmailView.as_view(), name='account_confirm_email'),
     re_path(r"^confirm-email/(?P<key>[-:\w]+)/$", CustomConfirmEmailView.as_view(), name="account_confirm_email"),
+    path("confirm-email", EmailConfirmationView.as_view(), name="confirm-email"),
+    path("verify-email", EmailVerificationView.as_view(), name="verify-email"),
     # path("google/", GoogleLogin.as_view(), name="google_login")
 ]

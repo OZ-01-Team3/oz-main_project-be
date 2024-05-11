@@ -16,23 +16,26 @@ from dj_rest_auth.models import get_token_model
 from dj_rest_auth.registration.views import RegisterView, SocialLoginView
 from dj_rest_auth.utils import jwt_encode
 from dj_rest_auth.views import LoginView
+from django.core.cache import cache
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import NotFound
+from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.user.models import Account
+from apps.user.serializers import EmailConfirmationSerializer
+from apps.user.utils import generate_confirmation_code, send_mail
 
-# from config.settings.settings import GOOGLE_OAUTH2_URL
 
 # class GoogleLogin(SocialLoginView):
 #     adapter_class = GoogleOAuth2Adapter
-#     callback_url = "GOOGLE_OAUTH2_URL"
+#     callback_url = api_settings.GOOGLE_OAUTH2_URL
 #     client_class = OAuth2Client
 
 
@@ -104,6 +107,22 @@ class CustomLoginView(LoginView):  # type: ignore
 
             set_jwt_cookies(response, self.access_token, self.refresh_token)
         return response
+
+
+class EmailConfirmationView(APIView):
+    def post(self, request, *args: Any, **kwargs: Any) -> Response:
+        serializer = EmailConfirmationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        email = serializer.validated_data("email")
+        confirmation_code = generate_confirmation_code()
+        send_mail()
+        cache.set(email, confirmation_code, timeout=api_settings.CODE_TIMEOUT)
+        return Response({"message": ""}, status=status.HTTP_200_OK)
+
+class EmailVerificationView(APIView):
+    def post(self, request, *args: Any, **kwargs: Any) -> Response:
+        pass
 
 
 class CustomConfirmEmailView(APIView):

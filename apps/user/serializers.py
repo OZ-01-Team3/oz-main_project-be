@@ -42,6 +42,14 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
         return nickname
 
 
+class EmailConfirmationSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class EmailVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
 # class CustomLoginSerializer(LoginSerializer):
 #     email = serializers.EmailField(required=False, allow_blank=True)
 #     password = serializers.CharField(style={'input_type': 'password'})

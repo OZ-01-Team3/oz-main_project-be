@@ -4,6 +4,7 @@ from allauth import app_settings
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import user_field
 from allauth.utils import import_attribute
+from django.conf import settings
 from requests import Request
 from rest_framework.exceptions import ValidationError
 
@@ -28,7 +29,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):  # type: ignore
         """
         이메일 확인 링크 커스텀
         """
-        url = FRONT_CONFIRM_URL + emailconfirmation.key
+        url = settings.FRONT_CONFIRM_URL + emailconfirmation.key
         return url
 
 
