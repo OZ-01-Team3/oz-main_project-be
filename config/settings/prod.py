@@ -98,7 +98,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": ENV["CACHES_PASSWORD"],
-        }
+        },
     }
 }
 

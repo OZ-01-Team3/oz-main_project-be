@@ -12,8 +12,14 @@ from dj_rest_auth.views import (
 from django.urls import include, path, re_path
 from rest_framework_simplejwt.views import TokenVerifyView
 
-from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignupView, SendCodeView, \
-    ConfirmEmailView, DeleteUserView
+from apps.user.views import (
+    ConfirmEmailView,
+    CustomConfirmEmailView,
+    CustomLoginView,
+    CustomSignupView,
+    DeleteUserView,
+    SendCodeView,
+)
 
 # from apps.user.views import CustomConfirmEmailView
 

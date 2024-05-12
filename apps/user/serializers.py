@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer, UserDetailsSerializer
 from rest_framework import exceptions, serializers
@@ -34,7 +36,19 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
 
     class Meta:
         model = Account
-        fields = ("email", "password1", "password2", "nickname", "phone", "age", "gender", "height", "region", "grade", "profile_img")
+        fields = (
+            "email",
+            "password1",
+            "password2",
+            "nickname",
+            "phone",
+            "age",
+            "gender",
+            "height",
+            "region",
+            "grade",
+            "profile_img",
+        )
 
     def validate_nickname(self, nickname: str) -> str:
         account_id = self.context["request"].user.id
@@ -43,17 +57,18 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
         return nickname
 
 
-class SendCodeSerializer(serializers.Serializer):
+class SendCodeSerializer(serializers.Serializer[Dict[str, Any]]):
     email = serializers.EmailField(required=True)
 
-    def validate(self, data):
+    def validate(self, data: Any) -> Any:
         if Account.objects.filter(email=data.get("email")).exists():
             raise serializers.ValidationError("This email is already registered.")
         return data
 
 
-class ConfirmEmailSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+class ConfirmEmailSerializer(serializers.Serializer[Dict[str, Any]]):
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(max_length=7, required=True)
 
 
 # class CustomLoginSerializer(LoginSerializer):

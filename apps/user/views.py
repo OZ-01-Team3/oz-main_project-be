@@ -9,7 +9,6 @@ from allauth.account.models import (
     EmailConfirmationHMAC,
     get_emailconfirmation_model,
 )
-from allauth.account.views import ConfirmEmailView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.app_settings import api_settings
@@ -22,7 +21,7 @@ from django.core.cache import cache
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
-from rest_framework import status, permissions
+from rest_framework import permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
@@ -33,7 +32,6 @@ from rest_framework.views import APIView
 from apps.user.models import Account
 from apps.user.serializers import SendCodeSerializer
 from apps.user.utils import generate_confirmation_code, send_email
-
 
 # class GoogleLogin(SocialLoginView):
 #     adapter_class = GoogleOAuth2Adapter
@@ -112,7 +110,7 @@ class CustomLoginView(LoginView):  # type: ignore
 
 
 class DeleteUserView(APIView):
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -121,7 +119,7 @@ class DeleteUserView(APIView):
 class SendCodeView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    def post(self, request) -> Response:
+    def post(self, request: Response) -> Response:
         serializer = SendCodeSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -133,8 +131,8 @@ class SendCodeView(APIView):
 
 
 class ConfirmEmailView(APIView):
-    def post(self, request, *args: Any, **kwargs: Any) -> Response:
-        pass
+    def post(self, request: Response, *args: Any, **kwargs: Any) -> Response:
+        return Response(status=status.HTTP_200_OK)
 
 
 class CustomConfirmEmailView(APIView):
