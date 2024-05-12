@@ -72,15 +72,16 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
 
     def to_representation(self, instance: Chatroom) -> Dict[str, Any]:
         data = super().to_representation(instance)
-        messages = Message.objects.filter(chatroom=instance)
+        user = self.context.get("user")
+        messages = Message.objects.filter(~Q(sender=user), chatroom=instance)
 
         if messages:
             # bulk_update 메서드를 사용하여 한 번에 여러 개체를 업데이트, 안읽은 메시지들을 읽음처리
             filter_condition = Q(status=True, id__in=messages.values_list("id", flat=True))
             Message.objects.filter(filter_condition).update(status=False)
             # 업데이트된 메시지를 다시 가져와서 시리얼라이저로 직렬화
-            messages = Message.objects.filter(chatroom=instance)
-            serializer = MessageSerializer(messages, many=True)
-            data["messages"] = serializer.data
+        messages = Message.objects.filter(chatroom=instance).order_by("timestamp")
+        serializer = MessageSerializer(messages, many=True)
+        data["messages"] = serializer.data
 
         return data
