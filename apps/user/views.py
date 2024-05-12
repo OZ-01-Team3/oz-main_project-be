@@ -30,7 +30,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.user.models import Account
-from apps.user.serializers import SendCodeSerializer
+from apps.user.serializers import SendCodeSerializer, ConfirmEmailSerializer
 from apps.user.utils import generate_confirmation_code, send_email
 
 # class GoogleLogin(SocialLoginView):
@@ -131,44 +131,57 @@ class SendCodeView(APIView):
 
 
 class ConfirmEmailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request: Response, *args: Any, **kwargs: Any) -> Response:
-        return Response(status=status.HTTP_200_OK)
+        serializer = ConfirmEmailSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        email = request.data.get("email")
+        code = request.data.get("code")
+        cached_code = cache.get(email)
+        if not cached_code:
+            return Response({"error": "The confirmation code has expired or does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+        if code != cached_code:
+            return Response({"error": "Invalid confirmation code."}, status=status.HTTP_400_BAD_REQUEST)
+        cache.delete(email)
+        return Response({"message": "Email confirmation successful."}, status=status.HTTP_200_OK)
 
 
-class CustomConfirmEmailView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> HttpResponse:
-        try:
-            self.object = self.get_object()
-            # if app_settings.CONFIRM_EMAIL_ON_GET:
-            return self.post(request, *args, **kwargs)
-        except Http404:
-            # return Response(status=status.HTTP_404_NOT_FOUND)
-            return render(request, "account/email/confirm-fail.html")
-
-    def post(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> HttpResponse:
-        self.object = confirmation = self.get_object()
-        email_address = confirmation.confirm(  # type: ignore
-            request
-        )  # EmailAddress 테이블에서 varified True로 변경하고 email 반환, 이미 True인 경우 None 반환
-        if not email_address:
-            #     return Response(status=status.HTTP_404_NOT_FOUND)
-            return render(request, "account/email/confirm-fail.html")
-        # return Response(status=status.HTTP_200_OK)
-        return render(request, "account/email/confirm-success.html")
-
-    def get_object(self, queryset: Any = None) -> EmailConfirmationHMAC | None:
-        """
-        get_emailconfirmation_model() -> EmailConfirmation 모델 반환
-        from_key() -> url에 있는 인증키로 인증 시도. 잘못된 key이거나 이미 인증된 key일 경우 None 반환
-        """
-        key = self.kwargs["key"]
-        model = get_emailconfirmation_model()
-        email_confirmation = model.from_key(key)
-        if not email_confirmation:
-            raise Http404()
-        return email_confirmation
-
-    def get_queryset(self) -> EmailConfirmation | None:
-        return EmailConfirmation.objects.all_valid().select_related("email_address__user")
+# class CustomConfirmEmailView(APIView):
+#     permission_classes = [AllowAny]
+#
+#     def get(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> HttpResponse:
+#         try:
+#             self.object = self.get_object()
+#             # if app_settings.CONFIRM_EMAIL_ON_GET:
+#             return self.post(request, *args, **kwargs)
+#         except Http404:
+#             # return Response(status=status.HTTP_404_NOT_FOUND)
+#             return render(request, "account/email/confirm-fail.html")
+#
+#     def post(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> HttpResponse:
+#         self.object = confirmation = self.get_object()
+#         email_address = confirmation.confirm(  # type: ignore
+#             request
+#         )  # EmailAddress 테이블에서 varified True로 변경하고 email 반환, 이미 True인 경우 None 반환
+#         if not email_address:
+#             #     return Response(status=status.HTTP_404_NOT_FOUND)
+#             return render(request, "account/email/confirm-fail.html")
+#         # return Response(status=status.HTTP_200_OK)
+#         return render(request, "account/email/confirm-success.html")
+#
+#     def get_object(self, queryset: Any = None) -> EmailConfirmationHMAC | None:
+#         """
+#         get_emailconfirmation_model() -> EmailConfirmation 모델 반환
+#         from_key() -> url에 있는 인증키로 인증 시도. 잘못된 key이거나 이미 인증된 key일 경우 None 반환
+#         """
+#         key = self.kwargs["key"]
+#         model = get_emailconfirmation_model()
+#         email_confirmation = model.from_key(key)
+#         if not email_confirmation:
+#             raise Http404()
+#         return email_confirmation
+#
+#     def get_queryset(self) -> EmailConfirmation | None:
+#         return EmailConfirmation.objects.all_valid().select_related("email_address__user")

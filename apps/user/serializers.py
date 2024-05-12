@@ -5,7 +5,6 @@ from dj_rest_auth.serializers import LoginSerializer, UserDetailsSerializer
 from rest_framework import exceptions, serializers
 
 from apps.user.models import Account
-from config.settings import settings
 
 
 class SignupSerializer(RegisterSerializer):  # type: ignore

@@ -259,13 +259,13 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "optional"  # default: "none", mandatory, optional
+ACCOUNT_EMAIL_VERIFICATION = "none"  # default: "none", mandatory, optional
 # 필수 아님
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_ADAPTER = "apps.user.adapters.CustomAccountAdapter"
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # 사용자가 받은 링크를 클릭하면 회원가입 완료됨
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # default 3
-ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = None
+# ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # 사용자가 받은 링크를 클릭하면 회원가입 완료됨
+# ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1  # default 3
+# ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = None
 
 # # django 이메일 인증 설정
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
