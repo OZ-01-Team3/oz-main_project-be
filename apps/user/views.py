@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from allauth.account import app_settings
@@ -16,6 +17,7 @@ from dj_rest_auth.models import get_token_model
 from dj_rest_auth.registration.views import RegisterView, SocialLoginView
 from dj_rest_auth.utils import jwt_encode
 from dj_rest_auth.views import LoginView
+from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -29,7 +31,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.user.models import Account
-from apps.user.serializers import EmailConfirmationSerializer
+from apps.user.serializers import SendCodeSerializer
 from apps.user.utils import generate_confirmation_code, send_mail
 
 
@@ -116,16 +118,20 @@ class DeleteUserView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class SendVerificationCodeView(APIView):
-    def post(self, request, *args: Any, **kwargs: Any) -> Response:
-        serializer = EmailConfirmationSerializer(data=request.data)
+class SendCodeView(APIView):
+    def post(self, request) -> Response:
+        serializer = SendCodeSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        email = serializer.validated_data("email")
-        confirmation_code = generate_confirmation_code()
-        send_mail()
-        cache.set(email, confirmation_code, timeout=api_settings.CODE_TIMEOUT)
-        return Response({"message": ""}, status=status.HTTP_200_OK)
+        email = serializer.validated_data.get("email")
+        verification_code = generate_confirmation_code()
+        print(verification_code)
+
+        subject = "회원 가입 인증 코드"
+        send_mail(subject, verification_code, settings.EMAIL_HOST_USER, email)
+        cache.set(email, verification_code, timeout=int(settings.EMAIL_CODE_TIMEOUT))
+        return Response({"message": "Verification email sent."}, status=status.HTTP_200_OK)
+
 
 class VerifyEmailView(APIView):
     def post(self, request, *args: Any, **kwargs: Any) -> Response:

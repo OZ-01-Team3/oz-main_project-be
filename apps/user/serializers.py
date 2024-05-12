@@ -43,8 +43,14 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
         return nickname
 
 
-class EmailConfirmationSerializer(serializers.Serializer):
+class SendCodeSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
+
+    def validate(self, data):
+        if Account.objects.filter(email=data.get("email")).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return data
+
 
 
 class EmailVerificationSerializer(serializers.Serializer):

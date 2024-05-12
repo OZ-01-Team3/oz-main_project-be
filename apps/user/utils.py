@@ -1,8 +1,8 @@
 import threading
+
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.utils.crypto import get_random_string
-
-from config.settings.settings import CONFIRM_CODE_LENGTH
 
 
 class EmailThread(threading.Thread):
@@ -27,4 +27,4 @@ def send_mail(subject, body, from_email, recipient, fail_silently=False, html=No
 
 
 def generate_confirmation_code():
-    return get_random_string(CONFIRM_CODE_LENGTH)
+    return get_random_string(length=int(settings.CONFIRM_CODE_LENGTH))
