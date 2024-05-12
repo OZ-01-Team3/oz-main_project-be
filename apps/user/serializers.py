@@ -52,8 +52,7 @@ class SendCodeSerializer(serializers.Serializer):
         return data
 
 
-
-class EmailVerificationSerializer(serializers.Serializer):
+class ConfirmEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 

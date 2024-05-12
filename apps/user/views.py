@@ -22,7 +22,7 @@ from django.core.cache import cache
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
@@ -32,7 +32,7 @@ from rest_framework.views import APIView
 
 from apps.user.models import Account
 from apps.user.serializers import SendCodeSerializer
-from apps.user.utils import generate_confirmation_code, send_mail
+from apps.user.utils import generate_confirmation_code, send_email
 
 
 # class GoogleLogin(SocialLoginView):
@@ -119,21 +119,20 @@ class DeleteUserView(APIView):
 
 
 class SendCodeView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request) -> Response:
         serializer = SendCodeSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         email = serializer.validated_data.get("email")
         verification_code = generate_confirmation_code()
-        print(verification_code)
-
-        subject = "회원 가입 인증 코드"
-        send_mail(subject, verification_code, settings.EMAIL_HOST_USER, email)
+        send_email(email, verification_code)
         cache.set(email, verification_code, timeout=int(settings.EMAIL_CODE_TIMEOUT))
         return Response({"message": "Verification email sent."}, status=status.HTTP_200_OK)
 
 
-class VerifyEmailView(APIView):
+class ConfirmEmailView(APIView):
     def post(self, request, *args: Any, **kwargs: Any) -> Response:
         pass
 

@@ -13,7 +13,7 @@ from django.urls import include, path, re_path
 from rest_framework_simplejwt.views import TokenVerifyView
 
 from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignupView, SendCodeView, \
-    VerifyEmailView, DeleteUserView
+    ConfirmEmailView, DeleteUserView
 
 # from apps.user.views import CustomConfirmEmailView
 
@@ -36,6 +36,6 @@ urlpatterns = [
     # re_path(r'^account-confirm-email/(?P<key>[-:\\w]+)/$', ConfirmEmailView.as_view(), name='account_confirm_email'),
     # re_path(r"^confirm-email/(?P<key>[-:\w]+)/$", CustomConfirmEmailView.as_view(), name="account_confirm_email"),
     path("send-code", SendCodeView.as_view(), name="send-verification-code"),
-    path("verify-email", VerifyEmailView.as_view(), name="verify-email"),
+    path("verify-email", ConfirmEmailView.as_view(), name="verify-email"),
     # path("google/", GoogleLogin.as_view(), name="google_login")
 ]
