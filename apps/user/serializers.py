@@ -30,10 +30,11 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
     height = serializers.IntegerField(required=False)
     region = serializers.CharField(required=False, allow_blank=True)
     grade = serializers.CharField(required=False, allow_blank=True)
+    profile_img = serializers.ImageField(required=False, use_url=True, allow_empty_file=True, allow_null=True)
 
     class Meta:
         model = Account
-        fields = ("email", "password1", "password2", "nickname", "phone", "age", "gender", "height", "region", "grade")
+        fields = ("email", "password1", "password2", "nickname", "phone", "age", "gender", "height", "region", "grade", "profile_img")
 
     def validate_nickname(self, nickname: str) -> str:
         account_id = self.context["request"].user.id

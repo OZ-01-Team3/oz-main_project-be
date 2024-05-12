@@ -12,8 +12,8 @@ from dj_rest_auth.views import (
 from django.urls import include, path, re_path
 from rest_framework_simplejwt.views import TokenVerifyView
 
-from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignupView, EmailConfirmationView, \
-    EmailVerificationView
+from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignupView, SendVerificationCodeView, \
+    VerifyEmailView, DeleteUserView
 
 # from apps.user.views import CustomConfirmEmailView
 
@@ -22,19 +22,20 @@ from apps.user.views import CustomConfirmEmailView, CustomLoginView, CustomSignu
 urlpatterns = [
     # path("", include("dj_rest_auth.urls")),
     # path("", include("dj_rest_auth.registration.urls")),
-    path("", CustomSignupView.as_view(), name="register"),
+    path("signup/", CustomSignupView.as_view(), name="register"),
     path("password/reset/", PasswordResetView.as_view(), name="rest_password_reset"),
     path("password/reset/confirm/", PasswordResetConfirmView.as_view(), name="rest_password_reset_confirm"),
     # path('login/', LoginView.as_view(), name='rest_login'),
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="rest_logout"),
     path("user/", UserDetailsView.as_view(), name="rest_user_details"),
+    path("leave/", DeleteUserView.as_view(), name="user-detail"),
     path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("token/refresh/", get_refresh_view().as_view(), name="token_refresh"),
     path("password/change/", PasswordChangeView.as_view(), name="rest_password_change"),
     # re_path(r'^account-confirm-email/(?P<key>[-:\\w]+)/$', ConfirmEmailView.as_view(), name='account_confirm_email'),
-    re_path(r"^confirm-email/(?P<key>[-:\w]+)/$", CustomConfirmEmailView.as_view(), name="account_confirm_email"),
-    path("confirm-email", EmailConfirmationView.as_view(), name="confirm-email"),
-    path("verify-email", EmailVerificationView.as_view(), name="verify-email"),
+    # re_path(r"^confirm-email/(?P<key>[-:\w]+)/$", CustomConfirmEmailView.as_view(), name="account_confirm_email"),
+    path("send_verify-code", SendVerificationCodeView.as_view(), name="send-verification-code"),
+    path("verify-email", VerifyEmailView.as_view(), name="verify-email"),
     # path("google/", GoogleLogin.as_view(), name="google_login")
 ]

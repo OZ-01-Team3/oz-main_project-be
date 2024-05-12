@@ -109,7 +109,14 @@ class CustomLoginView(LoginView):  # type: ignore
         return response
 
 
-class EmailConfirmationView(APIView):
+class DeleteUserView(APIView):
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SendVerificationCodeView(APIView):
     def post(self, request, *args: Any, **kwargs: Any) -> Response:
         serializer = EmailConfirmationSerializer(data=request.data)
         if not serializer.is_valid():
@@ -120,7 +127,7 @@ class EmailConfirmationView(APIView):
         cache.set(email, confirmation_code, timeout=api_settings.CODE_TIMEOUT)
         return Response({"message": ""}, status=status.HTTP_200_OK)
 
-class EmailVerificationView(APIView):
+class VerifyEmailView(APIView):
     def post(self, request, *args: Any, **kwargs: Any) -> Response:
         pass
 
