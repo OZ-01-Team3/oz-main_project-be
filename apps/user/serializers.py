@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer, UserDetailsSerializer
+from django.conf import settings
 from rest_framework import exceptions, serializers
 
 from apps.user.models import Account
@@ -68,6 +69,11 @@ class SendCodeSerializer(serializers.Serializer[Dict[str, Any]]):
 class ConfirmEmailSerializer(serializers.Serializer[Dict[str, Any]]):
     email = serializers.EmailField(required=True)
     code = serializers.CharField(max_length=7, required=True)
+
+    # def validate_code(self, code: str) -> str:
+    #     if len(code) != settings.CODE_LENGTH:
+    #         raise serializers.ValidationError("The length of the code is incorrect.")
+    #     return code
 
 
 # class CustomLoginSerializer(LoginSerializer):

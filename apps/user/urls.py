@@ -41,7 +41,7 @@ urlpatterns = [
     path("password/change/", PasswordChangeView.as_view(), name="rest_password_change"),
     # re_path(r'^account-confirm-email/(?P<key>[-:\\w]+)/$', ConfirmEmailView.as_view(), name='account_confirm_email'),
     # re_path(r"^confirm-email/(?P<key>[-:\w]+)/$", CustomConfirmEmailView.as_view(), name="account_confirm_email"),
-    path("send-code/", SendCodeView.as_view(), name="send-verification-code"),
-    path("verify-email/", ConfirmEmailView.as_view(), name="verify-email"),
+    path("send-code/", SendCodeView.as_view(), name="send-code"),
+    path("confirm-email/", ConfirmEmailView.as_view(), name="confirm-email"),
     # path("google/", GoogleLogin.as_view(), name="google_login")
 ]

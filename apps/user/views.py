@@ -136,7 +136,7 @@ class ConfirmEmailView(APIView):
     def post(self, request: Response, *args: Any, **kwargs: Any) -> Response:
         serializer = ConfirmEmailSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         email = request.data.get("email")
         code = request.data.get("code")
         cached_code = cache.get(email)
