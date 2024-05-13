@@ -14,7 +14,6 @@ from rest_framework_simplejwt.views import TokenVerifyView
 
 from apps.user.views import (
     ConfirmEmailView,
-    # CustomConfirmEmailView,
     CustomLoginView,
     CustomSignupView,
     DeleteUserView,
@@ -28,14 +27,14 @@ from apps.user.views import (
 urlpatterns = [
     # path("", include("dj_rest_auth.urls")),
     # path("", include("dj_rest_auth.registration.urls")),
-    path("signup/", CustomSignupView.as_view(), name="register"),
+    path("signup/", CustomSignupView.as_view(), name="signup"),
     path("password/reset/", PasswordResetView.as_view(), name="rest_password_reset"),
     path("password/reset/confirm/", PasswordResetConfirmView.as_view(), name="rest_password_reset_confirm"),
     # path('login/', LoginView.as_view(), name='rest_login'),
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="rest_logout"),
     path("user/", UserDetailsView.as_view(), name="rest_user_details"),
-    path("leave/", DeleteUserView.as_view(), name="user-detail"),
+    path("leave/", DeleteUserView.as_view(), name="delete-user"),
     path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("token/refresh/", get_refresh_view().as_view(), name="token_refresh"),
     path("password/change/", PasswordChangeView.as_view(), name="rest_password_change"),

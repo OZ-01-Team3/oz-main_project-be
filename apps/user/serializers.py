@@ -3,6 +3,7 @@ from typing import Any, Dict
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer, UserDetailsSerializer
 from django.conf import settings
+from django.db.models import Model
 from rest_framework import exceptions, serializers
 
 from apps.user.models import Account
@@ -36,7 +37,7 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
 
     class Meta:
         model = Account
-        fields = (
+        fields = UserDetailsSerializer.Meta.fields + (
             "email",
             "password1",
             "password2",
@@ -55,6 +56,16 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
         if Account.objects.filter(nickname=nickname).exclude(id=account_id).exists():
             raise serializers.ValidationError("This nickname is already in use.")
         return nickname
+
+    def update(self, instance: Any, validated_data: Dict[str, Any]) -> Any:
+        if "password1" in validated_data and "password2" in validated_data:
+            password1 = validated_data.pop("password1")
+            password2 = validated_data.pop("password2")
+            if password1 and password2 and password1 == password2:
+                instance.set_password(password1)
+            else:
+                raise serializers.ValidationError("Passwords don't match")
+        return super().update(instance, validated_data)
 
 
 class SendCodeSerializer(serializers.Serializer[Dict[str, Any]]):

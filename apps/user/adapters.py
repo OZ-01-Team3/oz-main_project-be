@@ -25,12 +25,12 @@ class CustomAccountAdapter(DefaultAccountAdapter):  # type: ignore
             raise ValidationError("This account is already registered.")
         return email
 
-    def get_email_confirmation_url(self, request: Request, emailconfirmation: Any) -> Any:
-        """
-        이메일 확인 링크 커스텀
-        """
-        url = settings.FRONT_CONFIRM_URL + emailconfirmation.key
-        return url
+    # def get_email_confirmation_url(self, request: Request, emailconfirmation: Any) -> Any:
+    #     """
+    #     이메일 확인 링크 커스텀
+    #     """
+    #     url = settings.FRONT_CONFIRM_URL + emailconfirmation.key
+    #     return url
 
 
 # def get_adapter(request=None):

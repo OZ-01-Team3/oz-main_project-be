@@ -30,7 +30,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.user.models import Account
-from apps.user.serializers import SendCodeSerializer, ConfirmEmailSerializer
+from apps.user.serializers import ConfirmEmailSerializer, SendCodeSerializer
 from apps.user.utils import generate_confirmation_code, send_email
 
 # class GoogleLogin(SocialLoginView):
@@ -141,7 +141,9 @@ class ConfirmEmailView(APIView):
         code = request.data.get("code")
         cached_code = cache.get(email)
         if not cached_code:
-            return Response({"error": "The confirmation code has expired or does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "The confirmation code has expired or does not exist."}, status=status.HTTP_400_BAD_REQUEST
+            )
         if code != cached_code:
             return Response({"error": "Invalid confirmation code."}, status=status.HTTP_400_BAD_REQUEST)
         cache.delete(email)
