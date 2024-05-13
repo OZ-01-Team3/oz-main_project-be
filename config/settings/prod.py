@@ -91,6 +91,17 @@ STORAGES = {
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": ENV["CACHES_LOCATION"],
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": ENV["CACHES_PASSWORD"],
+        },
+    }
+}
+
 # django 이메일 인증 설정
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = ENV["EMAIL_HOST"]  # 메일 호스트 서버
@@ -106,3 +117,5 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # 커스텀 설정  # TODO
 FRONT_CONFIRM_URL = ENV["FRONT_CONFIRM_URL"]
 GOOGLE_OAUTH2_URL = ENV["GOOGLE_OAUTH2_URL"]
+CONFIRM_CODE_LENGTH = ENV["CONFIRM_CODE_LENGTH"]
+EMAIL_CODE_TIMEOUT = ENV["EMAIL_CODE_TIMEOUT"]
