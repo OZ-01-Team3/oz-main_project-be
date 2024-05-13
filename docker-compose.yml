@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   db:
+    platform: linux/amd64
     image: postgres:16.2-alpine3.19
     container_name: db
     volumes:
@@ -18,10 +19,12 @@ services:
       - "ozmain3-cd"
 
   backend:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
     container_name: be
+    image: ysolarh/main3be:latest
     volumes:
       - ./apps:/backend/apps
       - ./config:/backend/config
@@ -34,6 +37,7 @@ services:
       - "ozmain3-cd"
 
   caddy:
+    platform: linux/amd64
     image: caddy:2.7-alpine
     container_name: caddy
     ports:

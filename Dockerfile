@@ -18,9 +18,6 @@ COPY ./manage.py ./manage.py
 COPY ./config ./config
 COPY ./apps ./apps
 COPY ./tools ./tools
-COPY ./.env ./.env
-
-RUN export $(cat env-be/.env | xargs)
 
 COPY ./entrypoint.sh ./entrypoint.sh
 ENTRYPOINT ["./entrypoint.sh"]
