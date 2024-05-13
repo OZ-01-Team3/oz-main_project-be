@@ -34,6 +34,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     path("api/categories/", include("apps.category.urls")),
     path("api/chat/", include("apps.chat.urls")),
+    path("api/products/", include("apps.product.urls")),
 ]
 
 if settings.DEBUG:
