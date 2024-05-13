@@ -1,5 +1,9 @@
+import django_stubs_ext
 from django.contrib import admin
-from .models import Product #ProductImage, ProductCategory, StyleCategory
+
+from .models import Product  # ProductImage, ProductCategory, StyleCategory
+
+django_stubs_ext.monkeypatch()
 
 # @admin.register(ProductCategory)
 # class ProductCategoryAdmin(admin.ModelAdmin):
@@ -13,8 +17,9 @@ from .models import Product #ProductImage, ProductCategory, StyleCategory
 # class ProductImageAdmin(admin.ModelAdmin):
 #     list_display = ["id", "product", "image"]
 
+
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(admin.ModelAdmin[Product]):
     list_display = [
         "name",
         "user",
@@ -25,13 +30,13 @@ class ProductAdmin(admin.ModelAdmin):
         "views",
         "status",
         "created_at",
-        "updated_at"
+        "updated_at",
     ]
     list_filter = [
-        #"product_category",
-        #"style_category",
+        # "product_category",
+        # "style_category",
         "status",
         "created_at",
-        "updated_at"
+        "updated_at",
     ]
     search_fields = ["name", "user__username"]

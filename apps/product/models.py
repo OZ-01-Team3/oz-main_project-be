@@ -1,5 +1,7 @@
 import uuid
+
 from django.db import models
+
 from apps.common.models import BaseModel
 from apps.common.utils import uuid4_generator
 
@@ -73,18 +75,18 @@ class Product(BaseModel):
     size = models.CharField(max_length=10)  # 사이즈
     views = models.IntegerField(default=0)  # 조회수
     product_category = models.ForeignKey("category.Category", on_delete=models.CASCADE, related_name="product")
-    #style_category = models.ManyToManyField(StyleCategory)
+    # style_category = models.ManyToManyField(StyleCategory)
     status = models.BooleanField(default=True)  # 대여 가능 여부
 
     def __str__(self) -> str:
         return self.name
 
 
-# def upload_to_s3_product(instance: models.Model, filename: str) -> str:
-#     # 파일명은 랜덤한 8자리의 문자열과 업로드한 파일이름을 조합해서 만듦(유일성 보장)
-#     return f"images/product/{uuid4_generator(length=8)} + {filename}"
+def upload_to_s3_product(instance: models.Model, filename: str) -> str:
+    # 파일명은 랜덤한 8자리의 문자열과 업로드한 파일이름을 조합해서 만듦(유일성 보장)
+    return f"images/product/{uuid4_generator(length=8)} + {filename}"
 
 
-# class ProductImage(BaseModel):
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-#     image = models.ImageField(upload_to=upload_to_s3_product)
+class ProductImage(BaseModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=upload_to_s3_product)

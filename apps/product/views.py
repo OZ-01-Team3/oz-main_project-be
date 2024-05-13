@@ -1,17 +1,19 @@
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny#IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny  # IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
+
 from apps.product.models import Product
 from apps.product.serializers import ProductSerializer
-from rest_framework.decorators import action
-from rest_framework.response import Response
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(viewsets.ModelViewSet[Product]):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: BaseSerializer[Product]) -> None:
         product = serializer.save(user=self.request.user)
 
     # @action(detail=False, methods=['GET'])
@@ -47,6 +49,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     #     instance.delete()
     #     return Response(status=204)
 
+
 # from rest_framework import viewsets
 # from rest_framework import status
 # from rest_framework.response import Response
@@ -68,42 +71,42 @@ class ProductViewSet(viewsets.ModelViewSet):
 #     queryset = Product.objects.all()
 #     serializer_class = ProductSerializer
 
-    # def get_queryset(self):
-    #     queryset = super().get_queryset()
-    #
-    #     # 검색 파라미터가 있는 경우에만 필터링
-    #     name = self.request.query_params.get('name')
-    #     style = self.request.query_params.get('style')
-    #     category = self.request.query_params.get('category')
-    #     size = self.request.query_params.get('size')
-    #     status = self.request.query_params.get('status')
-    #
-    #     if name:
-    #         queryset = queryset.filter(name__icontains=name)
-    #     if style:
-    #         queryset = queryset.filter(style__icontains=style)
-    #     if category:
-    #         queryset = queryset.filter(category__icontains=category)
-    #     if size:
-    #         queryset = queryset.filter(size__icontains=size)
-    #     if status:
-    #         status = True if status.lower() == 'true' else False
-    #         queryset = queryset.filter(status=status)
-    #
-    #     return queryset
+# def get_queryset(self):
+#     queryset = super().get_queryset()
+#
+#     # 검색 파라미터가 있는 경우에만 필터링
+#     name = self.request.query_params.get('name')
+#     style = self.request.query_params.get('style')
+#     category = self.request.query_params.get('category')
+#     size = self.request.query_params.get('size')
+#     status = self.request.query_params.get('status')
+#
+#     if name:
+#         queryset = queryset.filter(name__icontains=name)
+#     if style:
+#         queryset = queryset.filter(style__icontains=style)
+#     if category:
+#         queryset = queryset.filter(category__icontains=category)
+#     if size:
+#         queryset = queryset.filter(size__icontains=size)
+#     if status:
+#         status = True if status.lower() == 'true' else False
+#         queryset = queryset.filter(status=status)
+#
+#     return queryset
 
-    # def partial_update(self, request, *args, **kwargs):
-    #     kwargs['partial'] = True
-    #     return super().partial_update(request, *args, **kwargs)
-    #
-    # def update(self, request, *args, **kwargs):
-    #     kwargs['partial'] = False
-    #     return super().update(request, *args, **kwargs)
-    #
-    # def delete(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     self.perform_delete(instance)
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+# def partial_update(self, request, *args, **kwargs):
+#     kwargs['partial'] = True
+#     return super().partial_update(request, *args, **kwargs)
+#
+# def update(self, request, *args, **kwargs):
+#     kwargs['partial'] = False
+#     return super().update(request, *args, **kwargs)
+#
+# def delete(self, request, *args, **kwargs):
+#     instance = self.get_object()
+#     self.perform_delete(instance)
+#     return Response(status=status.HTTP_204_NO_CONTENT)
 
 # from django.shortcuts import get_object_or_404
 # from rest_framework import status
