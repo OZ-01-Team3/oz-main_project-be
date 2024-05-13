@@ -21,7 +21,8 @@ from django.core.cache import cache
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
-from rest_framework import permissions, status
+from drf_spectacular.utils import extend_schema_view, extend_schema_serializer, extend_schema, inline_serializer
+from rest_framework import permissions, status, serializers
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
@@ -29,6 +30,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.user.api_schema import LoginRequestSchema, LoginResponseSchema, ConfirmResponseSchema, ConfirmRequestSchema, \
+    SendRequestSchema, SendResponseSchema, SignupRequestSchema, SignupResponseSchema
 from apps.user.models import Account
 from apps.user.serializers import ConfirmEmailSerializer, SendCodeSerializer
 from apps.user.utils import generate_confirmation_code, send_email
@@ -39,6 +42,7 @@ from apps.user.utils import generate_confirmation_code, send_email
 #     client_class = OAuth2Client
 
 
+@extend_schema(request=SignupRequestSchema, responses=SignupResponseSchema)
 class CustomSignupView(RegisterView):  # type: ignore
     def create(self, request: Request, *args: Any, **kwargs: dict[str, Any]) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -61,6 +65,7 @@ class CustomSignupView(RegisterView):  # type: ignore
         return response
 
 
+@extend_schema(request=LoginRequestSchema, responses=LoginResponseSchema)
 class CustomLoginView(LoginView):  # type: ignore
     def get_response(self) -> Response:
         serializer_class = self.get_response_serializer()
@@ -116,6 +121,7 @@ class DeleteUserView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(request=SendRequestSchema, responses=SendResponseSchema)
 class SendCodeView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -130,6 +136,7 @@ class SendCodeView(APIView):
         return Response({"message": "Verification email sent."}, status=status.HTTP_200_OK)
 
 
+@extend_schema(request=ConfirmRequestSchema, responses=ConfirmResponseSchema)
 class ConfirmEmailView(APIView):
     permission_classes = [permissions.AllowAny]
 
