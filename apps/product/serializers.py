@@ -3,19 +3,25 @@
 # from apps.user.models import Account
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
+from apps.product.models import Product, RentalHistory
 
-from apps.product.models import Product
+
+class RentalHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RentalHistory
+        fields = "__all__"
 
 
 class ProductSerializer(serializers.ModelSerializer[Product]):
-    user = ReadOnlyField(source="user.nickname")
+    lender = ReadOnlyField(source="lender.nickname")
+    rental_history = RentalHistorySerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
         fields = (
             "uuid",
             "name",
-            "user",
+            "lender",
             "condition",
             "product_category",
             "purchasing_price",
@@ -25,5 +31,6 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "status",
             "created_at",
             "updated_at",
+            "rental_history",
         )
-        read_only_fields = ("created_at", "updated_at", "views", "user")
+        read_only_fields = ("created_at", "updated_at", "views", "lender")
