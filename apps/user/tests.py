@@ -338,11 +338,11 @@ class UserDetailViewTests(TestCase):
         res = self.client.patch(self.url, data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_upload_profile_image(self) -> None:
-        image_file = self.generate_image_file()
-        data = {"profile_img": image_file}
-        res = self.client.patch(self.url, data, format="multipart")
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+    # def test_upload_profile_image(self) -> None:
+    #     image_file = self.generate_image_file()
+    #     data = {"profile_img": image_file}
+    #     res = self.client.patch(self.url, data, format="multipart")
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     # TODO: 테스트 돌릴 때마다 S3에 올라감 이슈
     # def test_update_profile_image(self) -> None:

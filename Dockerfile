@@ -5,7 +5,9 @@ ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
 RUN pip install --upgrade pip \
-  && pip install poetry
+  && pip install poetry && pip install awscli
+
+RUN --mount=type=secret,id=aws,target=/.aws/credentials
 
 WORKDIR /backend
 

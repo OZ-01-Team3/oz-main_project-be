@@ -1,6 +1,8 @@
 #!/bin/sh
 
 ln -sf prod.py config/settings/settings.py
+sudo apt-get update
+sudo apt-get install vim -y
 python manage.py makemigrations
 python manage.py migrate
 python manage.py collectstatic --noinput

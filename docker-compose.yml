@@ -7,8 +7,6 @@ services:
     container_name: db
     volumes:
       - ./data/db:/var/lib/postgresql/data
-    env_file:
-      - ./.env
     environment:
       - POSTGRES_DB=${DATABASE_NAME}
       - POSTGRES_USER=${DATABASE_USER}
@@ -26,6 +24,7 @@ services:
     container_name: be
     image: ysolarh/main3be:latest
     volumes:
+      - ~/.aws:/.aws
       - ./apps:/backend/apps
       - ./config:/backend/config
       - ./tools:/backend/tools

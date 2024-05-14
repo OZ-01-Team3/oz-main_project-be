@@ -1,4 +1,4 @@
-mydj.localhost {
+api.coatycloset.store {
 	reverse_proxy backend:8000 {
 	}
 }
