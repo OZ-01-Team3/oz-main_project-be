@@ -7,7 +7,7 @@ from rest_framework.fields import ReadOnlyField
 from apps.product.models import Product, RentalHistory
 
 
-class RentalHistorySerializer(serializers.ModelSerializer):
+class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
     class Meta:
         model = RentalHistory
         fields = "__all__"

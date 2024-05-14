@@ -1,3 +1,4 @@
+from django.db.models import QuerySet
 from django_filters import filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.contrib import django_filters
@@ -31,7 +32,7 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     #         return qs
 
 
-class RentalHitoryViewset(viewsets.ModelViewSet):
+class RentalHitoryViewset(viewsets.ModelViewSet[RentalHistory]):
     queryset = RentalHistory.objects.all()
     serializer_class = RentalHistorySerializer
     permission_classes = [IsAuthenticated]
@@ -39,7 +40,7 @@ class RentalHitoryViewset(viewsets.ModelViewSet):
     search_fields = ["product__name", "lender"]
     ordering_fields = ["rental_date", "return_date"]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[RentalHistory]:
         # 반납 상태가 아직 False인 대여 기록만 반환하도록 필터링
         queryset = super().get_queryset()
         return queryset.filter(returned=False)

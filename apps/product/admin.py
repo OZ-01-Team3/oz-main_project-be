@@ -1,7 +1,10 @@
 import django_stubs_ext
 from django.contrib import admin
 
-from .models import Product, RentalHistory  # ProductImage, ProductCategory, StyleCategory
+from .models import (  # ProductImage, ProductCategory, StyleCategory
+    Product,
+    RentalHistory,
+)
 
 django_stubs_ext.monkeypatch()
 
@@ -30,17 +33,17 @@ class ProductAdmin(admin.ModelAdmin[Product]):
     ]
     search_fields = ["name", "lender__username"]
 
-    def rental_history(self, obj):
-        return obj.rentalhistory_set()  # 관련 대여 기록 반환
+    # def rental_history(self, obj):
+    #     return obj.rentalhistory_set()  # 관련 대여 기록 반환
 
-    rental_history.short_description = ("Rental history")
+    # rental_history.short_description = "Rental history"
 
 
 @admin.register(RentalHistory)
-class RentalHistoryAdmin(admin.ModelAdmin):
+class RentalHistoryAdmin(admin.ModelAdmin[RentalHistory]):
     list_display = [
         "product",
-        #"product_lender",
+        # "product_lender",
         "rental_date",
         "return_date",
     ]
@@ -49,6 +52,7 @@ class RentalHistoryAdmin(admin.ModelAdmin):
         "return_date",
     ]
     search_fields = ["product__name", "renter__username"]
+
 
 # @admin.register(ProductCategory)
 # class ProductCategoryAdmin(admin.ModelAdmin):

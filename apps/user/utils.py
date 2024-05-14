@@ -34,7 +34,7 @@ def send_email(email: str, verification_code: str) -> None:
 
 
 def generate_confirmation_code() -> str:
-    return get_random_string(length=int(settings.CONFIRM_CODE_LENGTH))
+    return get_random_string(length=int(settings.CONFIRM_CODE_LENGTH))  # TODO: 굳이?
 
 
 # def send_email(email, verification_code):
