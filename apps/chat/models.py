@@ -32,8 +32,15 @@ class Message(models.Model):
     def __str__(self) -> str:
         return f"{self.sender} : {self.text[:30]}.."
 
-
-class Alert(models.Model):
-    chatroom = models.ForeignKey(Chatroom, on_delete=models.CASCADE)
-    text = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    def get_other_user(self):
+        """
+        해당 메시지를 보낸 유저가 아닌 다른 유저를 반환
+        """
+        chatroom = self.chatroom
+        sender = self.sender
+        if chatroom:
+            if sender == chatroom.borrower:
+                return chatroom.lender
+            elif sender == chatroom.lender:
+                return chatroom.borrower
+        return None

@@ -6,6 +6,7 @@ from django.urls import path, reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from apps.category.models import Category
 from apps.chat.consumers import ChatConsumer
 from apps.chat.models import Chatroom, Message
 from apps.product.models import Product
@@ -17,11 +18,13 @@ class ChatRoomTestCase(APITestCase):
         # 요청을 보낼 유저 생성
         self.user = Account.objects.create_user(email="test@example.com", password="testpw123", nickname="test1")
         # 대여 상품 판매자 생성
-        self.borrower = Account.objects.create_user(email="test2s@example.com", password="testpw1234", nickname="test2")
+        self.lender = Account.objects.create_user(email="test2s@example.com", password="testpw1234", nickname="test2")
         # 대여 상품 생성
+        self.category = Category.objects.create(name="test")
         self.product = Product.objects.create(
             name="Test Product",
-            user=self.borrower,
+            lender=self.lender,
+            product_category=self.category,
             condition="Test Condition",
             purchasing_price=60000,
             rental_fee=5000,
@@ -31,7 +34,7 @@ class ChatRoomTestCase(APITestCase):
 
     def test_정상적인_채팅방_만들기_요청(self) -> None:
         url = reverse("chatroom")
-        data = {"borrower": self.borrower.id}
+        data = {"lender": self.lender.id}
 
         response = self.client.post(url, data)
 
@@ -39,9 +42,9 @@ class ChatRoomTestCase(APITestCase):
         self.assertEqual(Chatroom.objects.count(), 1)
         self.assertEqual(response.data.get("msg"), "Successful Created Chatroom")
 
-    def test_잘못된_borrower의_아이디로_채팅방을_개설하려는_경우(self) -> None:
+    def test_잘못된_lender의_아이디로_채팅방을_개설하려는_경우(self) -> None:
         url = reverse("chatroom")
-        data = {"borrower": 13241}
+        data = {"lender": 13241}
 
         response = self.client.post(url, data)
 
@@ -51,14 +54,14 @@ class ChatRoomTestCase(APITestCase):
     def test_로그인_유저의_채팅방리스트_가져오기(self) -> None:
         url = reverse("chatroom")
         # 먼저 채팅방 만들기
-        chatroom = Chatroom.objects.create(lender=self.user, borrower=self.borrower, product=self.product)
+        chatroom = Chatroom.objects.create(lender=self.lender, borrower=self.user, product=self.product)
         last_message = Message.objects.create(sender=self.user, text="test_last_message", chatroom=chatroom)
         # 채팅방 리스트 가져오기
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0].get("id"), chatroom.id)
-        self.assertEqual(response.data[0]["user_info"].get("nickname"), chatroom.borrower.nickname)
+        self.assertEqual(response.data[0]["user_info"].get("nickname"), chatroom.lender.nickname)
         self.assertEqual(response.data[0]["last_message"].get("text"), last_message.text)
         self.assertEqual(response.data[0]["last_message"].get("nickname"), last_message.sender.nickname)
 
@@ -66,11 +69,11 @@ class ChatRoomTestCase(APITestCase):
 class ChatDetailTestCase(APITestCase):
     def setUp(self) -> None:
         self.user = Account.objects.create_user(email="test@example.com", password="testpw1234", nickname="test1")
-        self.borrower = Account.objects.create_user(email="test2@example.com", password="testpw1234", nickname="test2")
-        self.chatroom = Chatroom.objects.create(borrower=self.borrower, lender=self.user)
+        self.lender = Account.objects.create_user(email="test2@example.com", password="testpw1234", nickname="test2")
+        self.chatroom = Chatroom.objects.create(borrower=self.user, lender=self.lender)
         for i in range(10):
             Message.objects.create(chatroom=self.chatroom, sender=self.user, text=f"test-message-{i}")
-            Message.objects.create(chatroom=self.chatroom, sender=self.borrower, text=f"test-message-{i}")
+            Message.objects.create(chatroom=self.chatroom, sender=self.lender, text=f"test-message-{i}")
         self.client.force_login(user=self.user)
 
     def test_채팅에_참여한_유저가_get요청을_보내는_경우(self) -> None:
@@ -113,7 +116,7 @@ class ChatDetailTestCase(APITestCase):
         self.assertEqual(response.data.get("msg"), "채팅방 나가기에 성공했습니다.")
 
         self.client.logout()
-        self.client.force_login(self.borrower)
+        self.client.force_login(self.lender)
 
         response = self.client.delete(url)
 
@@ -146,17 +149,19 @@ class ChatConsumerTest(TransactionTestCase):
         # 대여 상품 판매자 생성
         self.user2 = Account.objects.create_user(email="test2s@example.com", password="testpw1234", nickname="test2")
         # 대여 상품 생성
+        self.category = Category.objects.create(name="test")
         self.product = Product.objects.create(
             name="Test Product",
-            user=self.user2,
+            lender=self.user2,
+            product_category=self.category,
             condition="Test Condition",
             purchasing_price=60000,
             rental_fee=5000,
             size="XL",
         )
         self.chatroom = Chatroom.objects.create(
-            borrower=self.user2,
-            lender=self.user,
+            borrower=self.user,
+            lender=self.user2,
             product=self.product,
         )
         # 첫번째 유저 로그인
@@ -223,6 +228,11 @@ class ChatConsumerTest(TransactionTestCase):
         connected2, subprotocol2 = await communicator2.connect()
         self.assertTrue(connected2)  # 소켓 연결 확인
 
+        # 두 유저가 모두 상대가 접속중임을 알 수 있도록 opponent_state가 내려지는지 테스트
+        opponent_online_message_to_user1 = await communicator1.receive_json_from()
+        self.assertEqual(opponent_online_message_to_user1["opponent_state"], "online")
+        opponent_online_message_to_user2 = await communicator2.receive_json_from()
+        self.assertEqual(opponent_online_message_to_user2["opponent_state"], "online")
         # 첫번째 유저가 보낼 메시지
         data = {
             "message": "Message from user1",
