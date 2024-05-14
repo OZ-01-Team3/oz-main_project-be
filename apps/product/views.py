@@ -1,32 +1,34 @@
 from django_filters import filters
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.contrib import django_filters
 from mypy.dmypy.client import action
-from rest_framework import viewsets, generics, status
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework import generics, status, viewsets
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
+
 from apps.product.models import Product, RentalHistory
 from apps.product.serializers import ProductSerializer, RentalHistorySerializer
-from django_filters.rest_framework import DjangoFilterBackend
 
 
 class ProductViewSet(viewsets.ModelViewSet[Product]):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ["name", "status", "product_category"]
+    search_fields = ["name", "lender__nickname"]
 
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
-        product = serializer.save(user=self.request.user)
+        serializer.save(lender=self.request.user)
 
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        search_name = self.request.query_params.get("name")
-        if search_name:
-            qs = qs.filter(name__icontains=search_name)
-            return qs
+    # def get_queryset(self):
+    #     qs = super().get_queryset()
+    #     search_name = self.request.query_params.get("name")
+    #     if search_name:
+    #         qs = qs.filter(name__icontains=search_name)
+    #         return qs
 
 
 class RentalHitoryViewset(viewsets.ModelViewSet):
@@ -43,15 +45,15 @@ class RentalHitoryViewset(viewsets.ModelViewSet):
         return queryset.filter(returned=False)
 
     # 대여 상태 변경을 위한 엔드포인트 추가
-    def return_rental(self, request, *args, **kwargs):
-        rental = self.get_object()
-        rental.returned = True
-        rental.save()
-        return Response({"message": "반납이 완료 되었습니다."}, status=status.HTTP_200_OK)
-
-    # 대여 상태 변경을 위한 라우트 추가
-    def return_rental(self, request, *args, **kwargs):
-        return self.return_rental_record(request, *args, **kwargs)
+    # def return_rental(self, request, *args, **kwargs):
+    #     rental = self.get_object()
+    #     rental.returned = True
+    #     rental.save()
+    #     return Response({"message": "반납이 완료 되었습니다."}, status=status.HTTP_200_OK)
+    #
+    # # 대여 상태 변경을 위한 라우트 추가
+    # def return_rental(self, request, *args, **kwargs):
+    #     return self.return_rental_record(request, *args, **kwargs)
 
 
 # class SearchProductViewSet(viewsets.ModelViewSet):

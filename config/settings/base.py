@@ -64,6 +64,7 @@ CUSTOM_USER_APPS = [
     # "allauth.socialaccount.providers.kakao",
     "django_cleanup.apps.CleanupConfig",
     "corsheaders",
+    "django_filters",
     "apps.user",
     "apps.category",
     "apps.product",
@@ -172,6 +173,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",)
 }
 
 # drf-spectacular 관련 설정
