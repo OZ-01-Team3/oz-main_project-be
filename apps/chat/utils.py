@@ -46,6 +46,6 @@ def delete_chatroom(chatroom: Chatroom) -> bool:
 def check_opponent_online(chat_group_name) -> bool:
     """django-redis를 사용해서 그룹에 속한 멤버의 수를 가져옴"""
     redis_conn = get_redis_connection("default")
-    if redis_conn.zcard(f"asgi:group:{chat_group_name}") >= 2:
+    if redis_conn.zcard(f"asgi:group:{chat_group_name}") == 2:
         return True
     return False
