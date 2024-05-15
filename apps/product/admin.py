@@ -22,7 +22,7 @@ class ProductAdmin(admin.ModelAdmin[Product]):
         "status",
         "created_at",
         "updated_at",
-        "rental_history",
+        # "rental_history",
     ]
     list_filter = [
         # "product_category",

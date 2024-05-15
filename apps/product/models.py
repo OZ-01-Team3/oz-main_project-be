@@ -4,7 +4,7 @@ from django.db import models
 
 from apps.common.models import BaseModel
 from apps.common.utils import uuid4_generator
-from tools.create_superuser import Account
+from apps.user.models import Account
 
 
 class Product(BaseModel):
