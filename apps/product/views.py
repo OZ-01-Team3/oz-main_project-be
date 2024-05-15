@@ -2,7 +2,6 @@ from django.db.models import QuerySet
 from django_filters import filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.contrib import django_filters
-from mypy.dmypy.client import action
 from rest_framework import generics, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated

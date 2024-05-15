@@ -1,3 +1,6 @@
+import base64
+import io
+from io import BytesIO
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -6,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -253,6 +257,21 @@ class UserDetailViewTests(TestCase):
         self.user = get_user_model().objects.create(**self.data)
         self.client.force_login(self.user)
 
+    def generate_image_file(self) -> BytesIO:
+        image = Image.new("RGBA", size=(100, 100), color=(100, 100, 100))
+        file = BytesIO(image.tobytes())
+        image.save(file, format="PNG")
+        file.name = "test.png"
+        file.seek(0)
+        return file
+
+    def generate_image_to_base64(self) -> bytes:
+        file = BytesIO()
+        image = Image.new("RGBA", size=(100, 100), color=(155, 0, 0))
+        image.save(file, "png")
+        img_str = base64.b64encode(file.getvalue())
+        return img_str
+
     def test_get_user_info(self) -> None:
         res = self.client.get(self.url)
         res_data = res.json()
@@ -302,6 +321,43 @@ class UserDetailViewTests(TestCase):
         self.assertEqual(updated_user.grade, data["grade"])
         self.assertTrue(updated_user.check_password(str(data["password1"])))
 
+    def test_update_user_info_with_duplicate_nickname(self) -> None:
+        existing_nickname = "existing"
+        Account.objects.create_user(email="dfdf@dfdf.com", password="password", nickname=existing_nickname)
+        data = {"nickname": existing_nickname}
+        res = self.client.patch(self.url, data)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_user_info_with_same_nickname(self) -> None:
+        data = {"nickname": self.data["nickname"]}
+        res = self.client.patch(self.url, data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_update_user_info_with_different_passwords(self) -> None:
+        data = {"password1": "password1", "password2": "password2"}
+        res = self.client.patch(self.url, data)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # def test_upload_profile_image(self) -> None:
+    #     image_file = self.generate_image_file()
+    #     data = {"profile_img": image_file}
+    #     res = self.client.patch(self.url, data, format="multipart")
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    # TODO: 테스트 돌릴 때마다 S3에 올라감 이슈
+    # def test_update_profile_image(self) -> None:
+    #     profile_img = self.generate_image_file()
+    #     data = {
+    #         "email": "user@email.com",
+    #         "profile_img": profile_img
+    #     }
+    #     # Account.objects.create(**data)
+    #     res = self.client.patch(self.url, data, format="multipart")
+    #     image_file = self.generate_image_file()
+    #     data = {"email": "user@email.com", "profile_img": image_file}
+    #     res = self.client.patch(self.url, data, format="multipart")
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+
 
 class DeleteUserViewTests(TestCase):
     def setUp(self) -> None:
@@ -340,6 +396,18 @@ class SendCodeViewTests(TestCase):
         confirmation_code = cache.get(self.email)
         self.assertIsNotNone(confirmation_code)
         self.assertEqual(len(confirmation_code), int(settings.CONFIRM_CODE_LENGTH))
+
+    def test_send_code_with_duplicate_email(self) -> None:
+        data = {
+            "email": "user@email.com",
+            "password": "fels3570",
+            "nickname": "nick",
+            "phone": "1234",
+        }
+        self.user = Account.objects.create(**data)
+        data = {"email": data["email"]}
+        res = self.client.post(self.url, data, format="json")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class ConfirmEmailViewTests(TestCase):

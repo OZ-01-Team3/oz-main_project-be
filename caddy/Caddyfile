@@ -1,5 +1,11 @@
-mydj.localhost {
-	reverse_proxy backend:8000 {
-	    websocket
+api.django.store {
+	@api {
+		path /api/*
 	}
+	reverse_proxy @api backend:8000
+
+	@ws {
+		path /ws/*
+	}
+	reverse_proxy @ws backend:8000
 }

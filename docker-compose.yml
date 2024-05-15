@@ -2,12 +2,11 @@ version: '3.8'
 
 services:
   db:
+    platform: linux/amd64
     image: postgres:16.2-alpine3.19
     container_name: db
     volumes:
       - ./data/db:/var/lib/postgresql/data
-    env_file:
-      - ./.env
     environment:
       - POSTGRES_DB=${DATABASE_NAME}
       - POSTGRES_USER=${DATABASE_USER}
@@ -16,13 +15,18 @@ services:
       - "54321:5432"
     networks:
       - "ozmain3-cd"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
 
   backend:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
     container_name: be
+    image: ysolarh/main3be:latest
     volumes:
+      - $HOME/.aws:/root/.aws:ro
       - ./apps:/backend/apps
       - ./config:/backend/config
       - ./tools:/backend/tools
@@ -34,6 +38,7 @@ services:
       - "ozmain3-cd"
 
   caddy:
+    platform: linux/amd64
     image: caddy:2.7-alpine
     container_name: caddy
     ports:

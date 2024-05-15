@@ -7,6 +7,11 @@ ENV PYTHONDONTWRITEBYTECODE 1
 RUN pip install --upgrade pip \
   && pip install poetry
 
+#RUN pip install --upgrade pip \
+#  && pip install poetry && pip install awscli
+
+# RUN --mount=type=secret,id=aws,target=/.aws/credentials
+
 WORKDIR /backend
 
 COPY ./pyproject.toml ./poetry.lock* ./
@@ -18,9 +23,6 @@ COPY ./manage.py ./manage.py
 COPY ./config ./config
 COPY ./apps ./apps
 COPY ./tools ./tools
-COPY ./.env ./.env
-
-RUN export $(cat env-be/.env | xargs)
 
 COPY ./entrypoint.sh ./entrypoint.sh
 ENTRYPOINT ["./entrypoint.sh"]

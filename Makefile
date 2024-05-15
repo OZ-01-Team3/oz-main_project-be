@@ -95,7 +95,7 @@ superuser: ## createsuperuser
 
 .PHONY: test
 test: ## python manage.py test
-	$(PY) $(MNG) test
+	$(PY) $(MNG) test $(a)
 
 .PHONY: bim
 bim: $(SCRIPT) ## black, isort, mypy, coverage
