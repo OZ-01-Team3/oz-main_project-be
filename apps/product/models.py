@@ -1,8 +1,10 @@
 import uuid
+
 from django.db import models
+
 from apps.common.models import BaseModel
 from apps.common.utils import uuid4_generator
-from tools.create_superuser import Account
+from apps.user.models import Account
 
 
 class Product(BaseModel):
@@ -22,9 +24,9 @@ class Product(BaseModel):
     def __str__(self) -> str:
         return self.name
 
-    @property
-    def current_rental_record(self):
-        return self.rental_records.filter(return_date__isnull=True).first()
+    # @property
+    # def current_rental_record(self):
+    #     return self.rental_records.filter(return_date__isnull=True).first()
 
 
 def upload_to_s3_product(instance: models.Model, filename: str) -> str:
@@ -42,7 +44,7 @@ class RentalHistory(BaseModel):
         ("REQUEST", "request"),  # 대여 요청 상태
         ("ACCEPT", "accept"),  # 대여 승인 상태
         ("RETURNED", "returned"),  # 상품 반납 완료 상태
-        ("BORROWING", "borrowing")  # 상품 대여 중 상태
+        ("BORROWING", "borrowing"),  # 상품 대여 중 상태
     ]
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     borrower = models.ForeignKey(Account, on_delete=models.CASCADE)
@@ -50,5 +52,5 @@ class RentalHistory(BaseModel):
     return_date = models.DateTimeField(null=True, blank=True)  # 대여 반납일
     status = models.CharField(choices=STATUS_CHOICE, default="REQUEST", max_length=10)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.product} - Rented by {self.product.lender}"

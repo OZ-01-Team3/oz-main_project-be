@@ -83,7 +83,7 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
 
         return data
 
-    def get_product_image(self, obj):
+    def get_product_image(self, obj: ProductImage) -> Any:
         if obj.product:
             product_images = obj.product.productimage_set.first()
             if product_images:

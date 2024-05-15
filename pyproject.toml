@@ -29,6 +29,7 @@ uvicorn = {extras = ["standard"], version = "^0.29.0"}
 cryptography = "^42.0.7"
 daphne = "^4.1.2"
 django-stubs-ext = "^5.0.0"
+django-filter = "^24.2"
 
 
 [tool.poetry.group.dev.dependencies]
