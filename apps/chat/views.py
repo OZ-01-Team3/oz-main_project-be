@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.chat import serializers
-from apps.chat.models import Alert, Chatroom, Message
+from apps.chat.models import Chatroom, Message
 from apps.chat.utils import (
     change_entered_status,
     check_entered_chatroom,
@@ -42,7 +42,7 @@ class ChatRoomView(APIView):
     def post(self, request: Request) -> Response:
         serializer = serializers.CreateChatroomSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(lender=request.user)
+            serializer.save(borrower=request.user)
             return Response({"msg": "Successful Created Chatroom"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

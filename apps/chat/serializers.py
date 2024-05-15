@@ -3,7 +3,7 @@ from typing import Any, Dict
 from django.db.models import Q
 from rest_framework import serializers
 
-from apps.chat.models import Alert, Chatroom, Message
+from apps.chat.models import Chatroom, Message
 from apps.product.models import ProductImage
 
 
@@ -46,7 +46,7 @@ class CreateChatroomSerializer(serializers.ModelSerializer[Chatroom]):
     class Meta:
         model = Chatroom
         fields = "__all__"
-        read_only_fields = ["lender", "borrower_status", "lender_status"]
+        read_only_fields = ["borrower", "borrower_status", "lender_status"]
 
 
 class MessageSerializer(serializers.ModelSerializer[Message]):
@@ -58,17 +58,14 @@ class MessageSerializer(serializers.ModelSerializer[Message]):
 
 
 class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
-    # product_image = serializers.RelatedField(source="product.images", read_only=True)
-    # product_name = serializers.CharField(source="product.name", read_only=True)
-    # product_rental_fee = serializers.CharField(source="product.rental_fee")
-    # product_condition = serializers.CharField(source="product.condition", read_only=True)
+    product_image = serializers.SerializerMethodField()  # 상품 이미지
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_rental_fee = serializers.CharField(source="product.rental_fee", read_only=True)
+    product_condition = serializers.CharField(source="product.condition", read_only=True)
 
     class Meta:
         model = Chatroom
-        fields = [
-            "product",
-        ]
-        # fields = ["product", "product_image", "product_name", "product_rental_fee", "product_condition"]
+        fields = ["product", "product_image", "product_name", "product_rental_fee", "product_condition"]
 
     def to_representation(self, instance: Chatroom) -> Dict[str, Any]:
         data = super().to_representation(instance)
@@ -85,3 +82,10 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
         data["messages"] = serializer.data
 
         return data
+
+    def get_product_image(self, obj):
+        if obj.product:
+            product_images = obj.product.productimage_set.first()
+            if product_images:
+                return product_images.image.url  # 이미지의 URL을 리턴
+        return None  # 이미지가 없을 경우 None을 리턴
