@@ -12,4 +12,5 @@ python manage.py shell < tools/create_superuser.py
 #python manage.py runserver 0.0.0.0:80
 
 gunicorn --bind 0:8000 config.wsgi:application
-#uvicorn config.asgi:application --port 80 --workers 4
+#uvicorn config.asgi:application --workers 4
+#gunicorn config.asgi:application  -w 4 -k uvicorn.workers.UvicornWorker
