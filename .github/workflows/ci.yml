@@ -68,3 +68,15 @@ jobs:
       - name: Run Mypy
         run: |
           poetry run mypy .
+      
+      - name: Run makemigrations
+        run: |
+          poetry run python manage.py makemigrations category chat product user
+
+      - name: Run migrate
+        run: |
+          poetry run python manage.py migrate
+
+      - name: Run test
+        run: |
+          poetry run python manage.py test
