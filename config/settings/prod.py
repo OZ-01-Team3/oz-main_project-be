@@ -94,7 +94,7 @@ STORAGES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": ENV["CACHES_LOCATION"],
+        "LOCATION": f"redis://{ENV['REDIS_HOST']}:{ENV['REDIS_PORT']}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": ENV["CACHES_PASSWORD"],

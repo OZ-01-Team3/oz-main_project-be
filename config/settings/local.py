@@ -40,7 +40,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("CACHES_LOCATION"),
+        "LOCATION": f"redis://{env('REDIS_HOST')}:{env('REDIS_PORT')}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": env("CACHES_PASSWORD"),

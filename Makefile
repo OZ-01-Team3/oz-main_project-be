@@ -55,6 +55,10 @@ runserver: ## python manage.py runserver
 runserverp: ## python manage.py runserver
 	$(PY) $(MNG) runserver $(h):$(p)
 
+.PHONY: uvicorn
+uvicorn:  ## uvicorn config.asgi:application --workers 4
+	uvicorn $(CONF).asgi:application --workers 4
+
 .PHONY: migrations
 migrations: ## python manage.py makemigrations
 	$(PY) $(MNG) makemigrations $(a)
