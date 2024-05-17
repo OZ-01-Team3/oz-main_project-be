@@ -160,10 +160,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "user.Account"
 
-# cors 관련 설정
-# CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
+# # cors 관련 설정
+# # CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS").split(",")
+# CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ALLOW_CREDENTIALS = True
 
 # drf 관련 설정
 REST_FRAMEWORK = {

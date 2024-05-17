@@ -48,8 +48,20 @@ CACHES = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
-# CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+# cors 관련 설정
+CORS_ALLOWED_ORIGINS = env("ORIGINS").split(",")
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = env("ORIGINS").split(",")
+
+# csrf 관련 설정
+# CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
+CSRF_TRUSTED_ORIGINS = env("ORIGINS").split(",")
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = None
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_HTTPONLY = False
 
 # djangorestframework-simplejwt 관련 설정
 SIMPLE_JWT = {
