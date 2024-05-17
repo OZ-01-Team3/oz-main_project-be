@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from channels.db import database_sync_to_async
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
+from django.db.models import Q
 from django.test import TransactionTestCase
 from django.urls import path, reverse
 from rest_framework import status
@@ -26,7 +29,8 @@ class ChatRoomTestCase(APITestCase):
             lender=self.lender,
             product_category=self.category,
             condition="Test Condition",
-            purchasing_price=60000,
+            purchase_price=60000,
+            purchase_date=datetime.now(),
             rental_fee=5000,
             size="XL",
         )
@@ -64,6 +68,8 @@ class ChatRoomTestCase(APITestCase):
         self.assertEqual(response.data[0]["user_info"].get("nickname"), chatroom.lender.nickname)
         self.assertEqual(response.data[0]["last_message"].get("text"), last_message.text)
         self.assertEqual(response.data[0]["last_message"].get("nickname"), last_message.sender.nickname)
+        count = Message.objects.filter(~Q(sender=self.user), status=True, chatroom=chatroom).count()
+        self.assertEqual(response.data[0]["unread_chat_count"], count)
 
 
 class ChatDetailTestCase(APITestCase):
@@ -155,7 +161,8 @@ class ChatConsumerTest(TransactionTestCase):
             lender=self.user2,
             product_category=self.category,
             condition="Test Condition",
-            purchasing_price=60000,
+            purchase_price=60000,
+            purchase_date=datetime.now(),
             rental_fee=5000,
             size="XL",
         )
@@ -185,6 +192,9 @@ class ChatConsumerTest(TransactionTestCase):
 
         # 소켓 연결 확인
         self.assertTrue(connected)
+        # 상대방이 오프라인임을 확인
+        alert = await self.communicator.receive_json_from()
+        self.assertEqual(alert["opponent_state"], "offline")
 
         # 채팅메시지와 유저 정보 전송하기
         data = {
@@ -220,6 +230,10 @@ class ChatConsumerTest(TransactionTestCase):
         communicator1.scope["type"] = "websocket"  # 웹소켓 통신임을 설정
         connected1, subprotocol1 = await communicator1.connect()
         self.assertTrue(connected1)  # 소켓 연결 확인
+
+        # 첫번째 유저만 먼저접속해있으므로 opponent_state가 offline
+        opponent_online_message_to_user1 = await communicator1.receive_json_from()
+        self.assertEqual(opponent_online_message_to_user1["opponent_state"], "offline")
 
         # 웹소켓에 접속 요청 (두 번째 유저)
         communicator2 = WebsocketCommunicator(self.application, f"/ws/chat/{self.chatroom.id}/")
