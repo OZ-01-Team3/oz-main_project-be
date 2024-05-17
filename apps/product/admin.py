@@ -15,7 +15,7 @@ class ProductAdmin(admin.ModelAdmin[Product]):
         "name",
         "lender",
         "condition",
-        "purchasing_price",
+        "purchase_price",
         "rental_fee",
         "size",
         "views",
