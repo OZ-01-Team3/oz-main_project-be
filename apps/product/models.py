@@ -10,7 +10,7 @@ from apps.user.models import Account
 class Product(BaseModel):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
-    lender = models.ForeignKey("user.Account", on_delete=models.CASCADE, related_name="product")
+    lender = models.ForeignKey("user.Account", on_delete=models.CASCADE, related_name="products")
     # brand = models.ForeignKey(on_delete=models.SET_NULL, null=True)  # 브랜드
     brand = models.CharField(max_length=20, default="None")
     condition = models.TextField()  # 옷 상태
@@ -20,7 +20,7 @@ class Product(BaseModel):
     rental_fee = models.IntegerField()  # 대여 비용
     size = models.CharField(max_length=10)  # 사이즈
     views = models.IntegerField(default=0)  # 조회수
-    product_category = models.ForeignKey("category.Category", on_delete=models.CASCADE, related_name="product")
+    product_category = models.ForeignKey("category.Category", on_delete=models.CASCADE, related_name="products")
     # style_category = models.ManyToManyField(StyleCategory)
     status = models.BooleanField(default=True)  # 대여 가능 여부
     amount = models.IntegerField(default=1)
@@ -40,7 +40,7 @@ def upload_to_s3_product(instance: models.Model, filename: str) -> str:
 
 
 class ProductImage(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to=upload_to_s3_product)
 
 

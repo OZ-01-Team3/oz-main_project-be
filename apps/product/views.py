@@ -2,20 +2,20 @@ from django.db.models import QuerySet
 from django_filters import filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.contrib import django_filters
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
 from apps.product.models import Product, RentalHistory
+from apps.product.permissions import IsLenderOrReadOnly
 from apps.product.serializers import ProductSerializer, RentalHistorySerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet[Product]):
+    # queryset = Product.objects.all().prefetch_related('images')
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsLenderOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["name", "status", "product_category"]
     search_fields = ["name", "lender__nickname"]
@@ -31,10 +31,10 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     #         return qs
 
 
-class RentalHitoryViewset(viewsets.ModelViewSet[RentalHistory]):
+class RentalHistoryViewSet(viewsets.ModelViewSet[RentalHistory]):
     queryset = RentalHistory.objects.all()
     serializer_class = RentalHistorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["product__name", "lender"]
     ordering_fields = ["rental_date", "return_date"]
