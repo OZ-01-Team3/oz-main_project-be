@@ -41,13 +41,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
             await self.channel_layer.group_add(self.chat_group_name, self.channel_name)
             await self.accept()
             if check_opponent_online(self.chat_group_name):
-                await self.channel_layer.group_send(
-                    self.chat_group_name,
-                    {
-                        "type": "alert",
-                        "opponent_state": "online",
-                    },
-                )
+                await self.channel_layer.group_send(self.chat_group_name, {
+                    "type": "alert",
+                    "opponent_state": "online",
+                })
+            else:
+                await self.channel_layer.group_send(self.chat_group_name, {
+                    "type": "alert",
+                    "opponent_state": "offline",
+                })
         except Exception as e:
             logger.error("예외 발생: %s", e, exc_info=True)
             await self.close(code=1011, reason=str(e))
@@ -78,6 +80,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
 
             # 저장된 메시지를 직렬화
             data = MessageSerializer(chat).data
+            data["message"] = data.pop("text")
             data["type"] = "chat_message"
             # 수신된 메시지와 정보를 그룹에 속한 채팅 참가자들에게 보내기
             await self.channel_layer.group_send(self.chat_group_name, data)
@@ -106,16 +109,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
         그룹으로부터 수신한 메시지를 클라이언트에 전달
         """
         try:
-            await self.send_json(
-                {
-                    "type": event.get("type"),
-                    "message": event.get("text"),
-                    "nickname": event.get("nickname"),
-                    "image_url": event.get("image_url"),
-                    "status": event.get("status"),
-                    "timestamp": event.get("timestamp"),
-                }
-            )
+            await self.send_json(event)
         except Exception as e:
             logger.error("예외 발생: %s", e, exc_info=True)
             await self.close(code=1011, reason=str(e))
