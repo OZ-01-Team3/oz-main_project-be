@@ -13,8 +13,22 @@ services:
       - ./apps:/backend/apps
       - ./config:/backend/config
       - ./tools:/backend/tools
+    expose:
+      - "8000"
+#   ports:
+#    - "8000:8000"
+    networks:
+      - "main3be"
+  
+  nginx:
+    image: nginx:1.25.5-alpine
+    container_name: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
+    depends_on:
+      - backend
     networks:
       - "main3be"
 
