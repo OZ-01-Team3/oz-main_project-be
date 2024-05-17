@@ -5,8 +5,13 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from apps.notification.models import GlobalNotification, GlobalNotificationConfirm
-from apps.notification.utils import get_unread_notifications, get_entered_chatroom_ids, \
-    get_chat_notification_group_name, confirm_notification, create_global_notification_confirm
+from apps.notification.utils import (
+    confirm_notification,
+    create_global_notification_confirm,
+    get_chat_notification_group_name,
+    get_entered_chatroom_ids,
+    get_unread_notifications,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,12 +91,12 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             logger.error("예외 발생: %s", e, exc_info=True)
             await self.close(1011, reason="클라이언트로 알림 전송 중 예외 발생")
 
-    async def notification_global(self, event: dict[str, Any] ) -> None:
+    async def notification_global(self, event: dict[str, Any]) -> None:
         try:
             # 알림을 보내기전에 각 유저마다 알림을 읽었는지 확인할 수 있는 fk 모델 생성
-            await database_sync_to_async(
-                create_global_notification_confirm
-            )(user_id=self.user.id, notification_id=event["id"])
+            await database_sync_to_async(create_global_notification_confirm)(
+                user_id=self.user.id, notification_id=event["id"]
+            )
             # 알림을 클라이언트로 전송
             await self.send_json(event)
         except Exception as e:
@@ -107,5 +112,5 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
     commands = {
         "notification.rental.confirm": rental_notification_confirm,
-        "notification.global.confirm": global_notification_confirm
+        "notification.global.confirm": global_notification_confirm,
     }

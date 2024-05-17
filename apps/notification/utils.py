@@ -10,11 +10,15 @@ from django.dispatch import receiver
 from django_redis import get_redis_connection
 
 from apps.chat.consumers import ChatConsumer
-from apps.chat.models import Message, Chatroom
+from apps.chat.models import Chatroom, Message
 from apps.chat.serializers import MessageSerializer
 from apps.chat.utils import check_opponent_online
 from apps.notification import serializers
-from apps.notification.models import GlobalNotification, RentalNotification, GlobalNotificationConfirm
+from apps.notification.models import (
+    GlobalNotification,
+    GlobalNotificationConfirm,
+    RentalNotification,
+)
 from apps.product.models import RentalHistory
 from apps.user.models import Account
 
@@ -76,18 +80,13 @@ def rental_notification(sender, instance, created, **kwargs: Any) -> None:
         text = f"{instance.product.name}의 대여가 시작되었습니다. 반납일은 {instance.return_data.date}입니다."
         recipient = instance.borrower
 
-    chatroom_id = instance.product.chatroom_set.get(
-        borrower=instance.borrower, lender=instance.product.lender
-    ).id
+    chatroom_id = instance.product.chatroom_set.get(borrower=instance.borrower, lender=instance.product.lender).id
     # 가져온 채팅방 정보를 통해서 그룹네임을 가져옴
     chat_group_name = get_chat_notification_group_name(chatroom_id=chatroom_id)
 
     # 요청에 대한 새로운 알림을 데이터 베이스에 저장
     notification = create_rental_notification(
-        model=RentalNotification,
-        rental_history=instance,
-        text=text,
-        recipient=recipient
+        model=RentalNotification, rental_history=instance, text=text, recipient=recipient
     )
     # 저장된 알림을 직렬화해서 데이터에 담음
     serializer = serializers.RentalNotificationSerializer(notification)
@@ -127,12 +126,10 @@ def create_rental_notification(
     recipient: Type[Account],
     rental_history: Type[RentalHistory],
     text: str,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> Optional[RentalNotification]:
     try:
-        return model.objects.create(
-            recipient=recipient, rental_history=rental_history, text=text, **kwargs
-        )
+        return model.objects.create(recipient=recipient, rental_history=rental_history, text=text, **kwargs)
     except IntegrityError as e:
         logger.error("알림 db 저장 중 예외 발생: %s", e, exc_info=True)
         return None
@@ -143,7 +140,7 @@ def get_entered_chatroom_ids(user_id: int) -> list[int]:
         # 해당 사용자가 판매자 또는 대여자인 모든 채팅방을 가져옴
         chatrooms = Chatroom.objects.filter(Q(borrower_id=user_id) | Q(lender_id=user_id))
         # 가져온 채팅방들의 아이디를 리스트로 반환
-        chatroom_ids = chatrooms.values_list('id', flat=True)
+        chatroom_ids = chatrooms.values_list("id", flat=True)
         return chatroom_ids
     except Chatroom.DoesNotExist:
         return []
@@ -158,9 +155,7 @@ def get_unread_chat_notifications(user_id: int) -> Optional[dict[str, Any]]:
             unread_last_messages = []
 
             for chatroom in chatroom_list:
-                message = MessageSerializer(
-                    chatroom.message_set.exclude(sender=user_id).latest('timestamp')
-                ).data
+                message = MessageSerializer(chatroom.message_set.exclude(sender=user_id).latest("timestamp")).data
                 unread_last_messages.append(message)
 
             if unread_last_messages:

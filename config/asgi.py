@@ -21,7 +21,6 @@ from apps.notification.routing import websocket_urlpatterns as notification_rout
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.settings")
 
-application = ProtocolTypeRouter({
-    "http": django_asgi_app,
-    "websocket": AuthMiddlewareStack(URLRouter(chat_routing + notification_routing))
-})
+application = ProtocolTypeRouter(
+    {"http": django_asgi_app, "websocket": AuthMiddlewareStack(URLRouter(chat_routing + notification_routing))}
+)

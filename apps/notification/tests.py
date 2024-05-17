@@ -13,20 +13,22 @@ from apps.chat.consumers import ChatConsumer
 from apps.chat.models import Chatroom
 from apps.notification.consumers import NotificationConsumer
 from apps.notification.models import GlobalNotification, GlobalNotificationConfirm
+from apps.product.models import Product, ProductImage, RentalHistory
 from apps.user.models import Account
-from apps.product.models import Product, RentalHistory, ProductImage
 
 
 def encode_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+        encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
     return "data:image/jpeg;base64," + encoded_string
 
 
 class BaseTestCase(TransactionTestCase):
     def setUp(self) -> None:
         # 요청을 보낼 유저 생성
-        self.borrower = Account.objects.create_user(email="test@example.com", password="testpw123", nickname="borrower1")
+        self.borrower = Account.objects.create_user(
+            email="test@example.com", password="testpw123", nickname="borrower1"
+        )
         # 대여 상품 판매자 생성
         self.lender = Account.objects.create_user(email="test2@example.com", password="testpw1234", nickname="lender1")
         # 대여 상품 생성
@@ -43,21 +45,12 @@ class BaseTestCase(TransactionTestCase):
         )
         # 상품 이미지 생성
         self.image = SimpleUploadedFile(
-            name='test.jpg',
-            content=open('static/test/test.jpeg', 'rb').read(),
-            content_type='image/jpeg'
+            name="test.jpg", content=open("static/test/test.jpeg", "rb").read(), content_type="image/jpeg"
         )
-        self.encoded_image = encode_image_to_base64('static/test/test.jpeg')
-        self.product_image = ProductImage.objects.create(
-            product=self.product,
-            image=self.image
-        )
+        self.encoded_image = encode_image_to_base64("static/test/test.jpeg")
+        self.product_image = ProductImage.objects.create(product=self.product, image=self.image)
         # 채팅방 생성
-        self.chatroom = Chatroom.objects.create(
-            product=self.product,
-            borrower=self.borrower,
-            lender=self.lender
-        )
+        self.chatroom = Chatroom.objects.create(product=self.product, borrower=self.borrower, lender=self.lender)
         # 첫번째 유저 로그인
         self.client.force_login(user=self.borrower)
         # 두번째 유저 로그인
@@ -67,7 +60,7 @@ class BaseTestCase(TransactionTestCase):
         self.application = URLRouter(
             [
                 path("ws/notification/", NotificationConsumer.as_asgi()),
-                path("ws/chat/<int:chatroom_id>", ChatConsumer.as_asgi())
+                path("ws/chat/<int:chatroom_id>", ChatConsumer.as_asgi()),
             ]
         )
 
@@ -94,7 +87,7 @@ class RentalNotificationTestCase(BaseTestCase):
             borrower=self.borrower,
             rental_date=datetime.now(),
             return_date=datetime.now() + timedelta(days=3),
-            status="REQUEST"
+            status="REQUEST",
         )
 
         # 정상적으로 생성되었는지 확인
@@ -139,11 +132,7 @@ class ChatNotificationTestCase(BaseTestCase):
 
         # 새로운 채팅 메시지 생성
         # 채팅메시지와 유저 정보 전송하기
-        data = {
-            "message": "Test message",
-            "image": self.encoded_image,
-            "nickname": self.borrower.nickname
-        }
+        data = {"message": "Test message", "image": self.encoded_image, "nickname": self.borrower.nickname}
         await chat_communicator.send_json_to(data)
 
         # 메시지가 올바르게 받아졌는지 확인
@@ -180,9 +169,7 @@ class GlobalNotificationTestCase(TransactionTestCase):
         self.user2 = Account.objects.create_user(email="test2@example.com", password="testpw1234", nickname="testuser2")
         # 알림 이미지 생성
         self.image = SimpleUploadedFile(
-            name='test_image.jpg',
-            content=open('static/test/test.jpeg', 'rb').read(),
-            content_type='image/jpeg'
+            name="test_image.jpg", content=open("static/test/test.jpeg", "rb").read(), content_type="image/jpeg"
         )
         # 첫번째 유저 로그인
         self.client.force_login(user=self.user1)
@@ -199,7 +186,7 @@ class GlobalNotificationTestCase(TransactionTestCase):
     async def test_모든_사용자에게_공통으로_적용되는_알림_테스트(self) -> None:
         # 웹소켓에 접속 요청 (첫 번째 유저)
         communicator1 = WebsocketCommunicator(self.application, f"/ws/notification/")
-        communicator1.scope["user"] = self.user1 # 웹소켓 테스트를 위한 사용자 설정
+        communicator1.scope["user"] = self.user1  # 웹소켓 테스트를 위한 사용자 설정
         communicator1.scope["type"] = "websocket"  # 웹소켓 통신임을 설정
         connected1, subprotocol1 = await communicator1.connect()
         self.assertTrue(connected1)  # 소켓 연결 확인
@@ -213,10 +200,8 @@ class GlobalNotificationTestCase(TransactionTestCase):
 
         # 전역으로 전송할 알림 생성
         notification = await database_sync_to_async(GlobalNotification.objects.create)(
-            image=self.image,
-            text=f"{self.user1.nickname}을 위한 알림메시지"
+            image=self.image, text=f"{self.user1.nickname}을 위한 알림메시지"
         )
-
 
         # 알림이 전송되었는지 테스트
         notification_for_user1 = await communicator1.receive_json_from()
@@ -228,27 +213,33 @@ class GlobalNotificationTestCase(TransactionTestCase):
         self.assertEqual(notification_for_user2["text"], notification.text)
 
         # 알림 확인 모델이 생성되었는지 테스트
-        self.assertTrue(await database_sync_to_async(GlobalNotificationConfirm.objects.filter(notification=notification, user=self.user1, confirm=False).exists)())
-        self.assertTrue(await database_sync_to_async(GlobalNotificationConfirm.objects.filter(notification=notification, user=self.user2, confirm=False).exists)())
+        self.assertTrue(
+            await database_sync_to_async(
+                GlobalNotificationConfirm.objects.filter(
+                    notification=notification, user=self.user1, confirm=False
+                ).exists
+            )()
+        )
+        self.assertTrue(
+            await database_sync_to_async(
+                GlobalNotificationConfirm.objects.filter(
+                    notification=notification, user=self.user2, confirm=False
+                ).exists
+            )()
+        )
 
         # 유저1의 알림 읽기 테스트
-        await communicator1.send_json_to({
-            "command": "notification.global.confirm",
-            "notification_id": notification.id
-        })
-        user1_confirm_instance = await database_sync_to_async(
-            GlobalNotificationConfirm.objects.get
-        )(notification=notification, user=self.user1, confirm=False)
+        await communicator1.send_json_to({"command": "notification.global.confirm", "notification_id": notification.id})
+        user1_confirm_instance = await database_sync_to_async(GlobalNotificationConfirm.objects.get)(
+            notification=notification, user=self.user1, confirm=False
+        )
         self.assertFalse(user1_confirm_instance.confirm)
 
         # 유저2의 알림 읽기 테스트
-        await communicator1.send_json_to({
-            "command": "notification.global.confirm",
-            "notification_id": notification.id
-        })
-        user1_confirm_instance = await database_sync_to_async(
-            GlobalNotificationConfirm.objects.get
-        )(notification=notification, user=self.user1, confirm=False)
+        await communicator1.send_json_to({"command": "notification.global.confirm", "notification_id": notification.id})
+        user1_confirm_instance = await database_sync_to_async(GlobalNotificationConfirm.objects.get)(
+            notification=notification, user=self.user1, confirm=False
+        )
         self.assertFalse(user1_confirm_instance.confirm)
 
         # 소켓 정리

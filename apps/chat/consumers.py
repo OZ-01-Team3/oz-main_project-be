@@ -41,15 +41,21 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
             await self.channel_layer.group_add(self.chat_group_name, self.channel_name)
             await self.accept()
             if check_opponent_online(self.chat_group_name):
-                await self.channel_layer.group_send(self.chat_group_name, {
-                    "type": "alert",
-                    "opponent_state": "online",
-                })
+                await self.channel_layer.group_send(
+                    self.chat_group_name,
+                    {
+                        "type": "alert",
+                        "opponent_state": "online",
+                    },
+                )
             else:
-                await self.channel_layer.group_send(self.chat_group_name, {
-                    "type": "alert",
-                    "opponent_state": "offline",
-                })
+                await self.channel_layer.group_send(
+                    self.chat_group_name,
+                    {
+                        "type": "alert",
+                        "opponent_state": "offline",
+                    },
+                )
         except Exception as e:
             logger.error("예외 발생: %s", e, exc_info=True)
             await self.close(code=1011, reason=str(e))
