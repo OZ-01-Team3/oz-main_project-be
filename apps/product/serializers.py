@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
 from rest_framework.utils.serializer_helpers import ReturnDict
 
-from apps.product.models import Product, RentalHistory, ProductImage
+from apps.product.models import Product, ProductImage, RentalHistory
 from apps.user.serializers import UserInfoSerializer
 
 
@@ -63,8 +63,8 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
     #     return ProductImageSerializer(instance=images, many=True).data
     #     # return ProductImageSerializer(images, many=True, context=self.context).data
 
-    def create(self, validated_data: Any) -> ProductImage:
-        image_set = self.context.get("request").FILES
+    def create(self, validated_data: Any) -> Product:
+        image_set = self.context["request"].FILES
         product = Product.objects.create(**validated_data)
         for image in image_set.getlist("image"):
             ProductImage.objects.create(product=product, image=image)
