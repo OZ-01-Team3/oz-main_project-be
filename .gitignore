@@ -496,7 +496,7 @@ $RECYCLE.BIN/
 data/
 dockerfail/
 
-nginx/
+#nginx/
 failed_files/
 config/settings/settings.py
 ci.yml
