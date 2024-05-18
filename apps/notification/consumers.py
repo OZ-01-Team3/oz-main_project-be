@@ -16,12 +16,8 @@ from apps.notification.utils import (
 logger = logging.getLogger(__name__)
 
 
-class NotificationConsumer(AsyncJsonWebsocketConsumer):
-    groups = []
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.user = ""
+class NotificationConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
+    groups: list[str] = []
 
     async def connect(self) -> None:
         try:
@@ -48,7 +44,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             logger.error("예외 발생: %s", e, exc_info=True)
             await self.close(code=1011, reason=str(e))
 
-    async def disconnect(self, close_code: int):
+    async def disconnect(self, close_code: int) -> None:
         # 모든 그룹 연결 해제
         for group in self.groups:
             await self.channel_layer.group_discard(group, self.channel_name)
@@ -103,12 +99,13 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             logger.error("예외 발생: %s", e, exc_info=True)
             await self.close(1011, reason="클라이언트로 알림 전송 중 예외 발생")
 
-    @database_sync_to_async
+    @database_sync_to_async  # type: ignore
     def group_add_by_chatroom_ids(self, user_id: int) -> None:
         entered_chatroom_ids = get_entered_chatroom_ids(user_id=user_id)
-        for chatroom_id in entered_chatroom_ids:
-            chat_notification_group = get_chat_notification_group_name(chatroom_id=chatroom_id)
-            self.groups.append(chat_notification_group)
+        if entered_chatroom_ids is not None:
+            for chatroom_id in entered_chatroom_ids:
+                chat_notification_group = get_chat_notification_group_name(chatroom_id=chatroom_id)
+                self.groups.append(chat_notification_group)
 
     commands = {
         "notification.rental.confirm": rental_notification_confirm,

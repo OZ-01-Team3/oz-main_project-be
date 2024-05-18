@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_redis import get_redis_connection
+from rest_framework.utils.serializer_helpers import ReturnDict
 
 from apps.chat.consumers import ChatConsumer
 from apps.chat.models import Chatroom, Message
@@ -20,14 +21,13 @@ from apps.notification.models import (
     RentalNotification,
 )
 from apps.product.models import RentalHistory
-from apps.user.models import Account
 
 channel_layer = get_channel_layer()
 logger = logging.getLogger(__name__)
 redis_conn = get_redis_connection("default")
 
 
-@receiver(post_save, sender=GlobalNotification)
+@receiver(post_save, sender=GlobalNotification)  # type: ignore
 def send_global_notification(sender, instance, created, **kwargs):
     """
     모든 유저에게 전송할 알림이 db에 저장되었을 때 그룹으로 알림을 발송해 줌
@@ -39,12 +39,11 @@ def send_global_notification(sender, instance, created, **kwargs):
         async_to_sync(channel_layer.group_send)(group_name, data)
 
 
-@receiver(post_save, sender=Message)
-def new_chat_notification(sender, instance, created, **kwargs):
+@receiver(post_save, sender=Message)  # type: ignore
+def new_chat_notification(sender, instance, created, **kwargs: Any):
     """
     새로운 채팅메시지가 생성되었을 때 상대방이 채팅 소켓에 접속중이지 않다면 알림을 보내줌
     """
-    print("알림생성시작\n")
     # 인스턴스가 저장되고 status가 True인 상태 -> 메시지가 생성되고 읽지 않은상태
     if created and instance.status is True:
         chat_group_name = ChatConsumer.get_group_name(instance.chatroom.id)
@@ -55,30 +54,29 @@ def new_chat_notification(sender, instance, created, **kwargs):
             data["message"] = data.pop("text")
             data["type"] = "notification_chat"
             async_to_sync(channel_layer.group_send)(notification_group, data)
-            print("알림전송완료\n")
 
 
-@receiver(post_save, sender=RentalHistory)
+@receiver(post_save, sender=RentalHistory)  # type: ignore
 def rental_notification(sender, instance, created, **kwargs: Any) -> None:
     """
     유저가 상품을 대여신청 했을 때 판매자에게 대여신청 알림을 보내주는 메서드
     """
     text = ""
-    recipient = ""
+    recipient_id = ""
     if created and instance.status == "REQUEST":
         text = f"{instance.borrower.nickname}님의 {instance.product.name} 상품 대여 신청 확인하기"
-        recipient = instance.product.lender
+        recipient_id = instance.product.lender.id
     elif instance.status == "ACCEPT":
         text = f"{instance.product.name} 상품 대여 신청이 수락되었습니다."
-        recipient = instance.borrower
+        recipient_id = instance.borrower.id
 
     elif instance.status == "RETURNED":
         text = f"{instance.product.name}이 정상적으로 반납 완료되었습니다."
-        recipient = instance.borrower
+        recipient_id = instance.borrower.id
 
     elif instance.status == "BORROWING":
         text = f"{instance.product.name}의 대여가 시작되었습니다. 반납일은 {instance.return_data.date}입니다."
-        recipient = instance.borrower
+        recipient_id = instance.borrower.id
 
     chatroom_id = instance.product.chatroom_set.get(borrower=instance.borrower, lender=instance.product.lender).id
     # 가져온 채팅방 정보를 통해서 그룹네임을 가져옴
@@ -86,7 +84,7 @@ def rental_notification(sender, instance, created, **kwargs: Any) -> None:
 
     # 요청에 대한 새로운 알림을 데이터 베이스에 저장
     notification = create_rental_notification(
-        model=RentalNotification, rental_history=instance, text=text, recipient=recipient
+        model=RentalNotification, rental_history=instance, text=text, recipient_id=int(recipient_id)
     )
     # 저장된 알림을 직렬화해서 데이터에 담음
     serializer = serializers.RentalNotificationSerializer(notification)
@@ -96,7 +94,7 @@ def rental_notification(sender, instance, created, **kwargs: Any) -> None:
     async_to_sync(channel_layer.group_send)(chat_group_name, data)
 
 
-def get_chat_notification_group_name(chatroom_id) -> str:
+def get_chat_notification_group_name(chatroom_id: int) -> str:
     return f"notification-chat_{chatroom_id}"
 
 
@@ -116,64 +114,55 @@ def confirm_notification(model: models.Model, notification_id: int, user_id: int
     유저가 확인한 알림을 가져와서 comfirm = True 로 변경
     """
     if isinstance(model, RentalNotification):
-        model.objects.filter(id=notification_id, user_id=user_id).update(confirm=True)
+        model.objects.filter(id=notification_id, recipient_id=user_id).update(confirm=True)
     if isinstance(model, GlobalNotificationConfirm):
         model.objects.filter(notification_id=notification_id, user_id=user_id).update(confirm=True)
 
 
 def create_rental_notification(
     model: Type[RentalNotification],
-    recipient: Type[Account],
-    rental_history: Type[RentalHistory],
+    recipient_id: int,
+    rental_history: RentalHistory,
     text: str,
     **kwargs: Any,
 ) -> Optional[RentalNotification]:
     try:
-        return model.objects.create(recipient=recipient, rental_history=rental_history, text=text, **kwargs)
+        return model.objects.create(recipient_id=recipient_id, rental_history=rental_history, text=text, **kwargs)
     except IntegrityError as e:
         logger.error("알림 db 저장 중 예외 발생: %s", e, exc_info=True)
         return None
 
 
-def get_entered_chatroom_ids(user_id: int) -> list[int]:
+def get_entered_chatroom_ids(user_id: int) -> Optional[list[int]]:
     try:
         # 해당 사용자가 판매자 또는 대여자인 모든 채팅방을 가져옴
         chatrooms = Chatroom.objects.filter(Q(borrower_id=user_id) | Q(lender_id=user_id))
         # 가져온 채팅방들의 아이디를 리스트로 반환
         chatroom_ids = chatrooms.values_list("id", flat=True)
-        return chatroom_ids
+        return chatroom_ids  # type: ignore
     except Chatroom.DoesNotExist:
-        return []
-
-
-def get_unread_chat_notifications(user_id: int) -> Optional[dict[str, Any]]:
-    try:
-        # 해당 사용자가 판매자 또는 대여자인 모든 채팅방을 가져옴
-        chatroom_list = Chatroom.objects.filter(Q(borrower_id=user_id) | Q(lender_id=user_id))
-        # 각 채팅방의 최신 메시지를 필터링하여 가져옴
-        if chatroom_list:
-            unread_last_messages = []
-
-            for chatroom in chatroom_list:
-                message = MessageSerializer(chatroom.message_set.exclude(sender=user_id).latest("timestamp")).data
-                unread_last_messages.append(message)
-
-            if unread_last_messages:
-                # 결과를 직렬화하여 반환
-                result = {
-                    "unread_last_messages": MessageSerializer(unread_last_messages, many=True).data,
-                }
-                return result
         return None
-    except Message.DoesNotExist:
-        return None
+
+
+def get_unread_chat_notifications(user_id: int) -> list[ReturnDict[Any, Any]]:
+    # 해당 사용자가 판매자 또는 대여자인 모든 채팅방을 가져옴
+    chatroom_list = Chatroom.objects.filter(Q(borrower_id=user_id) | Q(lender_id=user_id))
+    # 각 채팅방의 최신 메시지를 필터링하여 가져옴
+    unread_last_messages = []
+    if chatroom_list:
+        for chatroom in chatroom_list:
+            message = chatroom.message_set.exclude(sender=user_id).filter(status=True).order_by("-timestamp").first()
+            if message:
+                data = MessageSerializer(message).data
+                unread_last_messages.append(data)
+    return unread_last_messages
 
 
 def get_unread_notifications(user_id: int) -> dict[str, Any]:
-    result = {}
+    result: dict[str, Any] = {}
     unread_global_notification = GlobalNotificationConfirm.objects.filter(user_id=user_id, confirm=False)
     if unread_global_notification:
-        result["global_notification"] = serializers.GlobalNotificationSerializer(
+        result["global_notification"] = serializers.GlobalNotificationConfirmSerializer(
             unread_global_notification, many=True
         ).data
 
@@ -190,6 +179,6 @@ def get_unread_notifications(user_id: int) -> dict[str, Any]:
     return result
 
 
-def create_global_notification_confirm(user_id: int, notification_id: int) -> None:
+def create_global_notification_confirm(user_id: int, notification_id: int) -> GlobalNotificationConfirm:
     obj, created = GlobalNotificationConfirm.objects.get_or_create(user_id=user_id, notification_id=notification_id)
     return obj

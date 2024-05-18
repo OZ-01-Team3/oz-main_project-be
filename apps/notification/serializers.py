@@ -1,3 +1,5 @@
+from typing import Any
+
 from rest_framework import serializers
 
 from apps.notification.models import (
@@ -7,13 +9,13 @@ from apps.notification.models import (
 )
 
 
-class GlobalNotificationSerializer(serializers.ModelSerializer):
+class GlobalNotificationSerializer(serializers.ModelSerializer[GlobalNotification]):
     class Meta:
         model = GlobalNotification
         exclude = ["updated_at"]
 
 
-class GlobalNotificationConfirmSerializer(serializers.ModelSerializer):
+class GlobalNotificationConfirmSerializer(serializers.ModelSerializer[GlobalNotificationConfirm]):
     text = serializers.CharField(source="notification.text", read_only=True)
     image = serializers.CharField(source="notification.image.url", read_only=True)
     recipient = serializers.CharField(source="notification.user", read_only=True)
@@ -23,7 +25,7 @@ class GlobalNotificationConfirmSerializer(serializers.ModelSerializer):
         exclude = ["updated_at", "notification", "user"]
 
 
-class RentalNotificationSerializer(serializers.ModelSerializer):
+class RentalNotificationSerializer(serializers.ModelSerializer[RentalNotification]):
     product_name = serializers.CharField(source="rental_history.product.name")  # 상품 이름
     product_image = serializers.SerializerMethodField()  # 상품 이미지
     borrower = serializers.CharField(source="rental_history.borrower.nickname")  # 빌리는 사람
@@ -47,8 +49,9 @@ class RentalNotificationSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
-    def get_product_image(self, obj):
-        product_images = obj.rental_history.product.images.first()
+    def get_product_image(self, obj: RentalNotification) -> Any:
+        product_images: RentalNotification = obj.rental_history.product.images.first()  # type: ignore
         if product_images:
-            return product_images.image.url  # 이미지의 URL을 리턴
+            # 이미지의 URL을 리턴
+            return product_images.image.url  # type: ignore
         return None  # 이미지가 없을 경우 None을 리턴
