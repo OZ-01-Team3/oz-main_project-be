@@ -8,6 +8,8 @@ from apps.product.models import ProductImage
 
 
 class ChatroomListSerializer(serializers.ModelSerializer[Chatroom]):
+    unread_chat_count = serializers.SerializerMethodField()  # 안읽은 채팅 수
+
     class Meta:
         model = Chatroom
         exclude = ["borrower", "lender", "borrower_status", "lender_status"]
@@ -40,6 +42,13 @@ class ChatroomListSerializer(serializers.ModelSerializer[Chatroom]):
         if last_message:
             data["last_message"] = MessageSerializer(last_message).data
         return data
+
+    def get_unread_chat_count(self, obj):
+        if obj.message_set:
+            user = self.context.get("user")
+            unread_chat_count = obj.message_set.filter(~Q(sender=user), status=True).count()
+            return unread_chat_count
+        return []
 
 
 class CreateChatroomSerializer(serializers.ModelSerializer[Chatroom]):
@@ -85,7 +94,7 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
 
     def get_product_image(self, obj: ProductImage) -> Any:
         if obj.product:
-            product_images = obj.product.productimage_set.first()
+            product_images = obj.product.images.first()
             if product_images:
                 return product_images.image.url  # 이미지의 URL을 리턴
         return None  # 이미지가 없을 경우 None을 리턴
