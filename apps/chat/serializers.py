@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from django.db.models import Q
 from rest_framework import serializers
@@ -43,12 +43,12 @@ class ChatroomListSerializer(serializers.ModelSerializer[Chatroom]):
             data["last_message"] = MessageSerializer(last_message).data
         return data
 
-    def get_unread_chat_count(self, obj):
+    def get_unread_chat_count(self, obj: Chatroom) -> Optional[int]:
         if obj.message_set:
             user = self.context.get("user")
-            unread_chat_count = obj.message_set.filter(~Q(sender=user), status=True).count()
+            unread_chat_count: int = obj.message_set.filter(~Q(sender=user), status=True).count()
             return unread_chat_count
-        return []
+        return None
 
 
 class CreateChatroomSerializer(serializers.ModelSerializer[Chatroom]):
