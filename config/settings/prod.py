@@ -100,7 +100,22 @@ STORAGES = {
             # "cloudfront_key_id": ENV["AWS_CLOUDFRONT_KEY_ID"]
         },
     },
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    "staticfiles": {
+        # "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            # "session_profile": ENV("AWS_S3_SESSION_PROFILE"),
+            "access_key": ENV["AWS_ACCESS_KEY_ID"],
+            "secret_key": ENV["AWS_SECRET_ACCESS_KEY"],
+            "bucket_name": ENV["AWS_STORAGE_BUCKET_NAME"],
+            # "default_acl": ENV["AWS_DEFAULT_ACL"],
+            "region_name": ENV["AWS_S3_REGION_NAME"],
+            "use_ssl": ENV["AWS_S3_USE_SSL"],
+            "custom_domain": ENV["AWS_STORAGE_BUCKET_NAME"] + ".s3.amazonaws.com",
+            # "cloudfront_key": ENV["AWS_CLOUDFRONT_KEY"],
+            # "cloudfront_key_id": ENV["AWS_CLOUDFRONT_KEY_ID"]
+        },
+    },
 }
 
 CACHES = {
