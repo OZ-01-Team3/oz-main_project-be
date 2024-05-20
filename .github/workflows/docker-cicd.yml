@@ -37,7 +37,6 @@ jobs:
       HOST: ${{ secrets.HOST }}
       USERNAME: ${{ secrets.USERNAME }}
       KEY: ${{ secrets.KEY }}
-      PORT: ${{ secrets.PORT }}
       BE_PORT: ${{ secrets.BE_PORT }}
       BE_CONTAINER: ${{ secrets.BE_CONTAINER }}
       BE_NETWORK: ${{ secrets.BE_NETWORK }}
@@ -49,7 +48,6 @@ jobs:
           host: $HOST
           username: $USERNAME
           key: $KEY
-          port: $PORT
           script: |
             docker pull $DOCKER_USER/$DOCKER_IMAGE:latest
             docker rm -f backend
