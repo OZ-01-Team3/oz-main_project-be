@@ -17,12 +17,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-#      - name: Docker login
-#        uses: docker/login-action@v3.1.0
-#        with:
-#          username: $DOCKER_USER
-#          password: $DOCKER_PASSWORD
-
       - name: Docker login
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
@@ -33,7 +27,7 @@ jobs:
           
       - name: Docker push
         run: |
-          docker push $DOCKER_USER/$IMAGE:latest
+          docker push $DOCKER_USER/$DOCKER_IMAGE:latest
 
   deploy:
     name: Deploy to EC2
