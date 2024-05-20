@@ -43,7 +43,7 @@ jobs:
       BE_PORT: ${{ secrets.BE_PORT }}
       BE_CONTAINER: ${{ secrets.BE_CONTAINER }}
       BE_NETWORK: ${{ secrets.BE_NETWORK }}
-      BE_VOLUME: ${{ secrets.BE_VOLUME
+      BE_VOLUME: ${{ secrets.BE_VOLUME }}
     steps:
       - name: Deploy Docker image
         uses: appleboy/ssh-action@v1.0.3
