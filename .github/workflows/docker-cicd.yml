@@ -17,11 +17,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+#      - name: Docker login
+#        uses: docker/login-action@v3.1.0
+#        with:
+#          username: $DOCKER_USER
+#          password: $DOCKER_PASSWORD
+
       - name: Docker login
-        uses: docker/login-action@v3.1.0
-        with:
-          username: $DOCKER_USER
-          password: $DOCKER_PASSWORD
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: Build the Docker image
         run: |
