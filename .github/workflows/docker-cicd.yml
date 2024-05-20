@@ -33,11 +33,6 @@ jobs:
     name: deploy to EC2
     needs: build
     runs-on: ubuntu-latest
-    env:
-      BE_PORT: ${{ secrets.BE_PORT }}
-      BE_CONTAINER: ${{ secrets.BE_CONTAINER }}
-      BE_NETWORK: ${{ secrets.BE_NETWORK }}
-      BE_VOLUME: ${{ secrets.BE_VOLUME }}
     steps:
       - name: executing remote ssh commands
         uses: appleboy/ssh-action@v1.0.3
@@ -48,5 +43,5 @@ jobs:
           script: |
             docker pull $DOCKER_USER/$DOCKER_IMAGE:latest
             docker rm -f $BE_CONTAINER
-            docker run -d -p $BE_PORT:$BE_PORT --name $BE_CONTAINER --network $BE_NETWORK -v $BE_VOLUME $DOCKER_USER/$DOCKER_IMAGE:latest
+            docker run -d -p ${{ secrets.BE_PORT }}:${{ secrets.BE_PORT }} --name ${{ secrets.BE_CONTAINER }} --network ${{ secrets.BE_NETWORK }} -v ${{ secrets.BE_VOLUME }} ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_IMAGE }}:latest
 
