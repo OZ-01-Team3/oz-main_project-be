@@ -41,7 +41,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            docker pull $DOCKER_USER/$DOCKER_IMAGE:latest
-            docker rm -f $BE_CONTAINER
+            docker pull ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_IMAGE }}:latest
+            docker rm -f ${{ secrets.BE_CONTAINER }}
             docker run -d -p ${{ secrets.BE_PORT }}:${{ secrets.BE_PORT }} --name ${{ secrets.BE_CONTAINER }} --network ${{ secrets.BE_NETWORK }} -v ${{ secrets.BE_VOLUME }} ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_IMAGE }}:latest
 
