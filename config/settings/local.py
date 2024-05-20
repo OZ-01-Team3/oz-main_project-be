@@ -13,7 +13,9 @@ DEBUG = True
 ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 
 INSTALLED_APPS += ["debug_toolbar"]
-MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE
+MIDDLEWARE = (
+    ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE + ["whitenoise.middleware.WhiteNoiseMiddleware"]
+)
 
 INTERNAL_IPS = ["127.0.0.1"]
 
@@ -40,7 +42,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("CACHES_LOCATION"),
+        "LOCATION": f"redis://{env('REDIS_HOST')}:{env('REDIS_PORT')}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": env("CACHES_PASSWORD"),
@@ -48,8 +50,20 @@ CACHES = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
-# CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+# cors 관련 설정
+CORS_ALLOWED_ORIGINS = env("ORIGINS").split(",")
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = env("ORIGINS").split(",")
+
+# csrf 관련 설정
+# CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
+CSRF_TRUSTED_ORIGINS = env("ORIGINS").split(",")
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = None
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_HTTPONLY = False
 
 # djangorestframework-simplejwt 관련 설정
 SIMPLE_JWT = {

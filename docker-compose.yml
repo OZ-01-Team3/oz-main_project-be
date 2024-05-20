@@ -1,23 +1,6 @@
 version: '3.8'
 
 services:
-  db:
-    platform: linux/amd64
-    image: postgres:16.2-alpine3.19
-    container_name: db
-    volumes:
-      - ./data/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=${DATABASE_NAME}
-      - POSTGRES_USER=${DATABASE_USER}
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-    ports:
-      - "54321:5432"
-    networks:
-      - "ozmain3-cd"
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-
   backend:
     platform: linux/amd64
     build:
@@ -30,28 +13,25 @@ services:
       - ./apps:/backend/apps
       - ./config:/backend/config
       - ./tools:/backend/tools
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
+    expose:
+      - "8000"
+#   ports:
+#    - "8000:8000"
     networks:
-      - "ozmain3-cd"
-
-  caddy:
-    platform: linux/amd64
-    image: caddy:2.7-alpine
-    container_name: caddy
+      - "main3be"
+  
+  nginx:
+    image: nginx:1.25.5-alpine
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/data:/caddy/data
     depends_on:
       - backend
     networks:
-      - "ozmain3-cd"
+      - "main3be"
 
 networks:
-  ozmain3-cd:
+  main3be:
 

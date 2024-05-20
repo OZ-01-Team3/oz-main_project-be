@@ -23,9 +23,21 @@ DATABASES = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = ENV["CSRF_TRUSTED_ORIGINS"].split(",")
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+# cors 관련 설정
+CORS_ALLOWED_ORIGINS = ENV["ORIGINS"].split(",")
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = ENV["ORIGINS"].split(",")
+
+# csrf 관련 설정
+# CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
+CSRF_TRUSTED_ORIGINS = ENV["ORIGINS"].split(",")
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = None
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_HTTPONLY = False
+
 
 CHANNEL_LAYERS = {
     "default": {
@@ -38,7 +50,7 @@ CHANNEL_LAYERS = {
 
 # djangorestframework-simplejwt 관련 설정
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),  # default: minutes=5
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),  # default: minutes=5
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # default: days=1
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -88,13 +100,28 @@ STORAGES = {
             # "cloudfront_key_id": ENV["AWS_CLOUDFRONT_KEY_ID"]
         },
     },
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    "staticfiles": {
+        # "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            # "session_profile": ENV("AWS_S3_SESSION_PROFILE"),
+            "access_key": ENV["AWS_ACCESS_KEY_ID"],
+            "secret_key": ENV["AWS_SECRET_ACCESS_KEY"],
+            "bucket_name": ENV["AWS_STORAGE_BUCKET_NAME"],
+            # "default_acl": ENV["AWS_DEFAULT_ACL"],
+            "region_name": ENV["AWS_S3_REGION_NAME"],
+            "use_ssl": ENV["AWS_S3_USE_SSL"],
+            "custom_domain": ENV["AWS_STORAGE_BUCKET_NAME"] + ".s3.amazonaws.com",
+            # "cloudfront_key": ENV["AWS_CLOUDFRONT_KEY"],
+            # "cloudfront_key_id": ENV["AWS_CLOUDFRONT_KEY_ID"]
+        },
+    },
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": ENV["CACHES_LOCATION"],
+        "LOCATION": f"redis://{ENV['REDIS_HOST']}:{ENV['REDIS_PORT']}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": ENV["CACHES_PASSWORD"],
