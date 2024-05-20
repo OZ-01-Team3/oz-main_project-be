@@ -11,68 +11,42 @@ env:
 
 jobs:
   build:
-    name: Docker Build
+    name: docker build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
 
-      - name: Docker login
+      - name: docker login
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
-      - name: Build the Docker image
+      - name: build the docker image
         run: |
           docker build -t $DOCKER_USER/$DOCKER_IMAGE:latest .
           
-      - name: Docker push
+      - name: docker push
         run: |
           docker push $DOCKER_USER/$DOCKER_IMAGE:latest
 
   deploy:
-    name: Deploy to EC2
+    name: deploy to EC2
     needs: build
     runs-on: ubuntu-latest
     env:
-      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_SG_NAME: ${{ secrets.AWS_SG_NAME }}
-      HOST: ${{ secrets.HOST }}
-      USERNAME: ${{ secrets.USERNAME }}
-      KEY: ${{ secrets.KEY }}
       BE_PORT: ${{ secrets.BE_PORT }}
       BE_CONTAINER: ${{ secrets.BE_CONTAINER }}
       BE_NETWORK: ${{ secrets.BE_NETWORK }}
       BE_VOLUME: ${{ secrets.BE_VOLUME }}
     steps:
-      - name: Get Github actions IP
-        id: ip
-        uses: haythem/public-ip@v1.2
-      
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: $AWS_ACCESS_KEY
-          aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
-          aws-region: $AWS_REGION
-
-      - name: Add Github actions IP to Security group
-        run: |
-          aws ec2 authorize-security-group-ingress --group-name $AWS_SG_NAME --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
-        
-      - name: Deploy Docker image
+      - name: executing remote ssh commands
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: $HOST
-          username: $USERNAME
-          key: $KEY
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
           script: |
             docker pull $DOCKER_USER/$DOCKER_IMAGE:latest
-            docker rm -f backend
+            docker rm -f $BE_CONTAINER
             docker run -d -p $BE_PORT:$BE_PORT --name $BE_CONTAINER --network $BE_NETWORK -v $BE_VOLUME $DOCKER_USER/$DOCKER_IMAGE:latest
-
-      - name: Remove Github actions IP from Security group
-        run: |
-          aws ec2 revoke-security-group-ingress --group-name $AWS_SG_NAME --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
 
