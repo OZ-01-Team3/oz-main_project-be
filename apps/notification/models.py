@@ -15,6 +15,9 @@ class GlobalNotification(BaseModel):
     image = models.ImageField(upload_to=upload_to_s3_notification, blank=True, null=True)
     text = models.TextField()
 
+    def __str__(self):
+        return f"{self.text[:30]}..."
+
 
 class GlobalNotificationConfirm(BaseModel):
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
@@ -27,3 +30,13 @@ class RentalNotification(BaseModel):
     rental_history = models.ForeignKey(RentalHistory, on_delete=models.CASCADE, null=True, blank=True)
     text = models.TextField()
     confirm = models.BooleanField(default=False)
+
+    def __str__(self):
+        if self.rental_history.status == "REQUEST":
+            return f"{self.rental_history.product.name}에 대한 {self.rental_history.borrower.nickname}님의 대여 요청 알림"
+        elif self.rental_history.status == "ACCEPT":
+            return f"{self.rental_history.product.name}에 대한 {self.recipient.nickname}의 대여 요청 수락 알림"
+        elif self.rental_history.status == "RETURNED":
+            return f"{self.rental_history.product.name} 반납 완료 알림"
+        elif self.rental_history.status == "BORROWING":
+            return f"{self.rental_history.product.name}에 대한 {self.rental_history.borrower.nickname}님의 대여 진행중 알림"

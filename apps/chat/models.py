@@ -18,7 +18,7 @@ class Chatroom(models.Model):
     lender_status = models.BooleanField(default=True)
 
     def __str__(self) -> str:
-        return f"판매자: {self.borrower}, 대여자: {self.lender}의 채팅방"
+        return f"판매자: {self.borrower.nickname}, 대여자: {self.lender.nickname}의 채팅방"
 
 
 class Message(models.Model):
