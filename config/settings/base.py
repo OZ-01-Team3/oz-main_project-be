@@ -312,9 +312,9 @@ REST_AUTH = {
     "JWT_AUTH_COOKIE": "ac",  # default: None
     "JWT_AUTH_REFRESH_COOKIE": "rf",  # default: None
     "JWT_AUTH_REFRESH_COOKIE_PATH": "/",
-    "JWT_AUTH_SECURE": False,
+    "JWT_AUTH_SECURE": True,
     "JWT_AUTH_HTTPONLY": False,  # default: False
-    "JWT_AUTH_SAMESITE": None,  # default: "Lax"
+    "JWT_AUTH_SAMESITE": "None",  # default: "Lax"
     "JWT_AUTH_RETURN_EXPIRATION": False,
     "JWT_AUTH_COOKIE_USE_CSRF": False,  # default: False
     "JWT_AUTH_COOKIE_ENFORCE_CSRF_ON_UNAUTHENTICATED": False,
