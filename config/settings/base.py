@@ -78,7 +78,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -171,7 +171,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         # "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",
         # "rest_framework.authentication.BasicAuthentication",
         "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
     ),
@@ -307,14 +307,14 @@ REST_AUTH = {
     "PASSWORD_RESET_USE_SITES_DOMAIN": False,
     "OLD_PASSWORD_FIELD_ENABLED": False,
     "LOGOUT_ON_PASSWORD_CHANGE": False,
-    "SESSION_LOGIN": True,
+    "SESSION_LOGIN": False,
     "USE_JWT": True,  # default: False
-    "JWT_AUTH_COOKIE": "ac",  # default: None
-    "JWT_AUTH_REFRESH_COOKIE": "rf",  # default: None
+    "JWT_AUTH_COOKIE": "adfdfd",  # default: None
+    "JWT_AUTH_REFRESH_COOKIE": "rfdfdf",  # default: None
     "JWT_AUTH_REFRESH_COOKIE_PATH": "/",
-    "JWT_AUTH_SECURE": False,
+    "JWT_AUTH_SECURE": True,
     "JWT_AUTH_HTTPONLY": False,  # default: False
-    "JWT_AUTH_SAMESITE": None,  # default: "Lax"
+    "JWT_AUTH_SAMESITE": "None",  # default: "Lax"
     "JWT_AUTH_RETURN_EXPIRATION": False,
     "JWT_AUTH_COOKIE_USE_CSRF": False,  # default: False
     "JWT_AUTH_COOKIE_ENFORCE_CSRF_ON_UNAUTHENTICATED": False,

@@ -1,9 +1,19 @@
+from typing import Any
+
 from django.db.models import QuerySet
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
+# from django.utils.decorators import method_decorator
+# from django.views.decorators.csrf import csrf_exempt
 from django_filters import filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.contrib import django_filters
+from requests import Response
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.request import Request
 from rest_framework.serializers import BaseSerializer
 
 from apps.product.models import Product, RentalHistory
@@ -19,9 +29,13 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["name", "status", "product_category"]
     search_fields = ["name", "lender__nickname"]
+    parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
         serializer.save(lender=self.request.user)
+
+    def get_queryset(self) -> QuerySet[Product]:
+        return Product.objects.all().order_by("-created_at")
 
     # def get_queryset(self):
     #     qs = super().get_queryset()

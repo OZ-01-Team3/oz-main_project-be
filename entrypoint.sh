@@ -14,4 +14,6 @@ python manage.py shell < tools/create_superuser.py
 
 #gunicorn --bind 0.0.0.0:80 config.wsgi:application
 #uvicorn config.asgi:application --workers 4
-gunicorn config.asgi:application  -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+#gunicorn config.asgi:application  -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+
+gunicorn config.asgi:application -c tools/gunicorn_prod.conf.py
