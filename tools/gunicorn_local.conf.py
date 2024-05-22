@@ -3,6 +3,7 @@ import logging.handlers
 import os
 import sys
 from datetime import datetime
+from typing import Any
 
 os.makedirs("logs/gunicorn", exist_ok=True)
 
@@ -14,8 +15,8 @@ errorlog = f"./logs/gunicorn/error_{datetime.now().strftime('%Y-%m-%d')}.log"
 loglevel = "info"
 
 
-def post_fork(server, worker):
-    log_formatter = logging.Formatter('%(asctime)s [%(process)d] [%(levelname)s] %(message)s')
+def post_fork(server: Any, worker: Any) -> None:
+    log_formatter = logging.Formatter("%(asctime)s [%(process)d] [%(levelname)s] %(message)s")
 
     # 기존 핸들러 제거
     for handler in server.log.error_log.handlers:

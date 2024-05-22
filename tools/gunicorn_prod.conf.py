@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import Any
 
 bind = "0.0.0.0:8000"
 workers = 4
@@ -9,8 +10,8 @@ loglevel = "info"
 # errorlog = "-"
 
 
-def post_fork(server, worker):
-    log_formatter = logging.Formatter('%(asctime)s [%(process)d] [%(levelname)s] %(message)s')
+def post_fork(server: Any, worker: Any) -> None:
+    log_formatter = logging.Formatter("%(asctime)s [%(process)d] [%(levelname)s] %(message)s")
 
     # 기존 핸들러 제거
     for handler in server.log.error_log.handlers:

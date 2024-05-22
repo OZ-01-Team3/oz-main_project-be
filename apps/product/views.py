@@ -3,6 +3,7 @@ from typing import Any
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+
 # from django.utils.decorators import method_decorator
 # from django.views.decorators.csrf import csrf_exempt
 from django_filters import filters
@@ -33,7 +34,7 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
         serializer.save(lender=self.request.user)
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Product]:
         return Product.objects.all().order_by("-created_at")
 
     # def get_queryset(self):

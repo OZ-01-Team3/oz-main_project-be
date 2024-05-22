@@ -70,7 +70,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             ProductImage.objects.create(product=product, image=image)
         return product
 
-    def update(self, instance, validated_data) -> Product:
+    def update(self, instance: Product, validated_data: Any) -> Product:
         image_set = self.context["request"].FILES
         existing_images = set(instance.images.values_list("id", flat=True))
         new_images = set()
