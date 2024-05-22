@@ -69,3 +69,18 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
         for image in image_set.getlist("image"):
             ProductImage.objects.create(product=product, image=image)
         return product
+
+    def update(self, instance, validated_data) -> Product:
+        image_set = self.context["request"].FILES
+        existing_images = set(instance.images.values_list("id", flat=True))
+        new_images = set()
+        if image_set:
+            for image in image_set.getlist("image"):
+                new_image = ProductImage.objects.create(product=instance, image=image)
+                new_images.add(new_image.id)
+        images_to_delete = existing_images - new_images
+        ProductImage.objects.filter(id__in=images_to_delete).delete()
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
