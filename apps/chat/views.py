@@ -27,7 +27,9 @@ class ChatRoomView(APIView):
         description="유저가 참여한 채팅방 리스트를 내려주는 get메서드",
     )
     def get(self, request: Request) -> Response:
-        chatroom_list = Chatroom.objects.filter(Q(lender=request.user) | Q(borrower=request.user))
+        chatroom_list = Chatroom.objects.filter(
+            Q(lender=request.user, lender_status=True) | Q(borrower=request.user, borrower_status=True)
+        )
         if chatroom_list:
             serializer = serializers.ChatroomListSerializer(chatroom_list, context={"user": request.user}, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
