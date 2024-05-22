@@ -59,6 +59,10 @@ runserverp: ## python manage.py runserver
 uvicorn:  ## uvicorn config.asgi:application --workers 4
 	uvicorn $(CONF).asgi:application --workers 4
 
+.PHONY: gunicorn
+gunicorn:  ## gunicorn config.asgi:application -c tools/gunicorn_local.conf.py
+	gunicorn $(CONF).asgi:application -c tools/gunicorn_local.conf.py
+
 .PHONY: migrations
 migrations: ## python manage.py makemigrations
 	$(PY) $(MNG) makemigrations $(a)
