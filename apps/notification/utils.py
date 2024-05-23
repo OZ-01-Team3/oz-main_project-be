@@ -35,7 +35,6 @@ def send_global_notification(sender, instance, created, **kwargs):
     if created:
         group_name = "notification-global"
         data = serializers.GlobalNotificationSerializer(instance).data
-        data["type"] = "notification_global"
         async_to_sync(channel_layer.group_send)(group_name, data)
 
 
@@ -52,7 +51,7 @@ def new_chat_notification(sender, instance, created, **kwargs: Any):
         if not check_opponent_online(chat_group_name):
             data = MessageSerializer(instance).data
             data["message"] = data.pop("text")
-            data["type"] = "notification_chat"
+            data["type"] = "chat_notification"
             async_to_sync(channel_layer.group_send)(notification_group, data)
 
 
@@ -89,7 +88,6 @@ def rental_notification(sender, instance, created, **kwargs: Any) -> None:
     # 저장된 알림을 직렬화해서 데이터에 담음
     serializer = serializers.RentalNotificationSerializer(notification)
     data = serializer.data
-    data["type"] = "notification_rental"
     # 직렬화된 데이터를 그룹으로 보냄
     async_to_sync(channel_layer.group_send)(chat_group_name, data)
 
@@ -154,6 +152,7 @@ def get_unread_chat_notifications(user_id: int) -> list[ReturnDict[Any, Any]]:
             message = chatroom.message_set.exclude(sender=user_id).filter(status=True).order_by("-timestamp").first()
             if message:
                 data = MessageSerializer(message).data
+                data["type"] = "chat_notification"
                 unread_last_messages.append(data)
     return unread_last_messages
 
@@ -174,7 +173,7 @@ def get_unread_notifications(user_id: int) -> dict[str, Any]:
 
     unread_message = get_unread_chat_notifications(user_id=user_id)
     if unread_message:
-        result["unread_notification"] = unread_message
+        result["chat_notification"] = unread_message
 
     return result
 
