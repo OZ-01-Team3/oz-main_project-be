@@ -4,6 +4,13 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from apps.chat.models import Chatroom, Message
+from apps.chat.utils import (
+    get_chatroom_message,
+    get_last_message,
+    get_unread_message_count_at_redis,
+    read_messages_at_postgres,
+    read_messages_at_redis,
+)
 from apps.product.models import ProductImage
 
 
@@ -38,16 +45,17 @@ class ChatroomListSerializer(serializers.ModelSerializer[Chatroom]):
             if product_image:
                 data["product_image"] = product_image.image.url
 
-        last_message = Message.objects.filter(chatroom=instance).order_by("-timestamp").first()
-        if last_message:
-            data["last_message"] = MessageSerializer(last_message).data
+        last_message = get_last_message(chatroom_id=instance.id)
+        data["last_message"] = last_message
         return data
 
     def get_unread_chat_count(self, obj: Chatroom) -> Optional[int]:
-        if obj.message_set:
+        user = self.context.get("user")
+        if user and obj.message_set:
             user = self.context.get("user")
-            unread_chat_count: int = obj.message_set.filter(~Q(sender=user), status=True).count()
-            return unread_chat_count
+            db_unread_count: int = obj.message_set.filter(~Q(sender=user), status=True).count()
+            redis_unread_count: int = get_unread_message_count_at_redis(chatroom_id=obj.id, nickname=user.nickname)
+            return db_unread_count + redis_unread_count
         return None
 
 
@@ -79,17 +87,14 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
     def to_representation(self, instance: Chatroom) -> Dict[str, Any]:
         data = super().to_representation(instance)
         user = self.context.get("user")
-        messages = Message.objects.filter(~Q(sender=user), chatroom=instance)
+        if user:
+            # redis에 캐싱된 채팅방 메시지 읽음처리
+            read_messages_at_redis(nickname=user.nickname, chatroom_id=instance.id)
+            # postgres에 저장된 채팅방 메시지를 읽음처리
+            read_messages_at_postgres(user_id=user.id, chatroom_id=instance.id)
 
-        if messages:
-            # bulk_update 메서드를 사용하여 한 번에 여러 개체를 업데이트, 안읽은 메시지들을 읽음처리
-            filter_condition = Q(status=True, id__in=messages.values_list("id", flat=True))
-            Message.objects.filter(filter_condition).update(status=False)
-            # 업데이트된 메시지를 다시 가져와서 시리얼라이저로 직렬화
-        messages = Message.objects.filter(chatroom=instance).order_by("timestamp")
-        serializer = MessageSerializer(messages, many=True)
-        data["messages"] = serializer.data
-
+            messages = get_chatroom_message(chatroom_id=instance.id)
+            data["messages"] = messages
         return data
 
     def get_product_image(self, obj: ProductImage) -> Any:
