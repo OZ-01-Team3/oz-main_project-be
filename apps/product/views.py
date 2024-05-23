@@ -16,22 +16,27 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.serializers import BaseSerializer
 
-from apps.product.models import Product, RentalHistory
+from apps.product.models import Product, RentalHistory, ProductImage
 from apps.product.permissions import IsLenderOrReadOnly
-from apps.product.serializers import ProductSerializer, RentalHistorySerializer
+from apps.product.serializers import ProductSerializer, RentalHistorySerializer, ProductImageSerializer
 
 
+# @method_decorator(cache_page(60 * 60 * 2), name="dispatch")
 class ProductViewSet(viewsets.ModelViewSet[Product]):
     # queryset = Product.objects.all().prefetch_related('images')
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsLenderOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ["name", "status", "product_category"]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["status", "product_category", "condition", "size", "region"]
     search_fields = ["name", "lender__nickname"]
+    ordering_fields = ["created_at", "rental_fee", "views"]
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
+        print("req!", self.request.META)
+        print("cookie!", self.request.COOKIES)
+        print("csrf!", self.request.COOKIES["csrftoken"])
         serializer.save(lender=self.request.user)
 
     def get_queryset(self) -> QuerySet[Product]:
@@ -43,6 +48,30 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     #     if search_name:
     #         qs = qs.filter(name__icontains=search_name)
     #         return qs
+
+    # @method_decorator(cache_page(60 * 60 * 2))
+    # def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+    #     queryset = self.filter_queryset(self.get_queryset())
+    #
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = self.get_serializer(page, many=True)
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
+
+
+class ProductImageDeleteView(generics.DestroyAPIView):
+    queryset = ProductImage.objects.all()
+    serializer = ProductImageSerializer
+
+
+
+
+
+class ProductImageCreateView(generics.CreateAPIView):
+    pass
 
 
 class RentalHistoryViewSet(viewsets.ModelViewSet[RentalHistory]):
