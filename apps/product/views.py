@@ -62,16 +62,16 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     #     return Response(serializer.data)
 
 
-class ProductImageDeleteView(generics.DestroyAPIView):
-    queryset = ProductImage.objects.all()
-    serializer = ProductImageSerializer
+# class ProductImageDeleteView(generics.DestroyAPIView):
+#     queryset = ProductImage.objects.all()
+#     serializer = ProductImageSerializer
 
 
 
 
 
-class ProductImageCreateView(generics.CreateAPIView):
-    pass
+# class ProductImageCreateView(generics.CreateAPIView):
+#     pass
 
 
 class RentalHistoryViewSet(viewsets.ModelViewSet[RentalHistory]):
