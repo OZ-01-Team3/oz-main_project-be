@@ -100,7 +100,7 @@ class RentalNotificationTestCase(BaseTestCase):
         self.assertEqual(req_notification["product_image"], self.product_image.image.url)
         self.assertEqual(req_notification["borrower"], rental_history.borrower.nickname)
         self.assertEqual(req_notification["lender"], rental_history.product.lender.nickname)
-        self.assertEqual(req_notification["type"], "notification_rental")
+        self.assertEqual(req_notification["type"], "rental_notification")
         self.assertEqual(req_notification["status"], rental_history.status)
         self.assertEqual(req_notification["return_date"], rental_history.return_date.isoformat())
         self.assertEqual(req_notification["rental_date"], rental_history.rental_date.isoformat())
@@ -202,6 +202,7 @@ class GlobalNotificationTestCase(TransactionTestCase):
         notification = await database_sync_to_async(GlobalNotification.objects.create)(
             image=self.image, text=f"{self.user1.nickname}을 위한 알림메시지"
         )
+        self.assertEqual(await database_sync_to_async(GlobalNotification.objects.count)(), 1)
 
         # 알림이 전송되었는지 테스트
         notification_for_user1 = await communicator1.receive_json_from()
@@ -229,14 +230,14 @@ class GlobalNotificationTestCase(TransactionTestCase):
         )
 
         # 유저1의 알림 읽기 테스트
-        await communicator1.send_json_to({"command": "notification.global.confirm", "notification_id": notification.id})
+        await communicator1.send_json_to({"command": "global_notification_confirm", "notification_id": notification.id})
         user1_confirm_instance = await database_sync_to_async(GlobalNotificationConfirm.objects.get)(
             notification=notification, user=self.user1, confirm=False
         )
         self.assertFalse(user1_confirm_instance.confirm)
 
         # 유저2의 알림 읽기 테스트
-        await communicator1.send_json_to({"command": "notification.global.confirm", "notification_id": notification.id})
+        await communicator1.send_json_to({"command": "global_notification_confirm", "notification_id": notification.id})
         user1_confirm_instance = await database_sync_to_async(GlobalNotificationConfirm.objects.get)(
             notification=notification, user=self.user1, confirm=False
         )

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from rest_framework import serializers
 
@@ -14,15 +14,30 @@ class GlobalNotificationSerializer(serializers.ModelSerializer[GlobalNotificatio
         model = GlobalNotification
         exclude = ["updated_at"]
 
+    def to_representation(self, instance: GlobalNotification) -> dict[str, Any]:
+        data = super().to_representation(instance)
+        data["type"] = "global_notification"
+        return data
+
 
 class GlobalNotificationConfirmSerializer(serializers.ModelSerializer[GlobalNotificationConfirm]):
     text = serializers.CharField(source="notification.text", read_only=True)
-    image = serializers.CharField(source="notification.image.url", read_only=True)
+    image = serializers.SerializerMethodField()
     recipient = serializers.CharField(source="notification.user", read_only=True)
 
     class Meta:
         model = GlobalNotificationConfirm
         exclude = ["updated_at", "notification", "user"]
+
+    def get_image(self, obj: GlobalNotificationConfirm) -> Optional[str]:
+        if obj.notification.image:
+            return str(obj.notification.image.url)
+        return None
+
+    def to_representation(self, instance: GlobalNotificationConfirm) -> dict[str, Any]:
+        data = super().to_representation(instance)
+        data["type"] = "global_notification"
+        return data
 
 
 class RentalNotificationSerializer(serializers.ModelSerializer[RentalNotification]):
@@ -47,6 +62,7 @@ class RentalNotificationSerializer(serializers.ModelSerializer[RentalNotificatio
             "return_date",
             "status",
             "created_at",
+            "text",
         ]
 
     def get_product_image(self, obj: RentalNotification) -> Any:
@@ -55,3 +71,8 @@ class RentalNotificationSerializer(serializers.ModelSerializer[RentalNotificatio
             # 이미지의 URL을 리턴
             return product_images.image.url  # type: ignore
         return None  # 이미지가 없을 경우 None을 리턴
+
+    def to_representation(self, instance: RentalNotification) -> dict[str, Any]:
+        data = super().to_representation(instance)
+        data["type"] = "rental_notification"
+        return data
