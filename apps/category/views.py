@@ -8,3 +8,4 @@ class CategoryListView(generics.ListAPIView[Category]):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
