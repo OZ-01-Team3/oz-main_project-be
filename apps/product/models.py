@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from django.db import models
 
@@ -43,7 +44,7 @@ class ProductImage(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to=upload_to_s3_product)
 
-    def get_image_url(self) -> str | None:
+    def get_image_url(self) -> Any | None:
         if self.image and hasattr(self.image, "url"):
             return self.image.url
         return None

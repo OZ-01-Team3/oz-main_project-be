@@ -1,8 +1,8 @@
 # from rest_framework import serializers
 # from apps.product.models import Product, ProductImage, ProductCategory, StyleCategory
 # from apps.user.models import Account
-from typing import Any
 import logging
+from typing import Any
 
 from django.db import transaction
 from rest_framework import serializers
@@ -13,6 +13,7 @@ from apps.product.models import Product, ProductImage, RentalHistory
 from apps.user.serializers import UserInfoSerializer
 
 logger = logging.getLogger(__name__)
+
 
 class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
     class Meta:
@@ -70,13 +71,6 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             ProductImage.objects.bulk_create(product_images)
         return product
 
-    # def create(self, validated_data: Any) -> Product:
-    #     image_set = self.context["request"].FILES
-    #     product = Product.objects.create(**validated_data)
-    #     for image in image_set.getlist("image"):
-    #         ProductImage.objects.create(product=product, image=image)
-    #     return product
-
     @transaction.atomic
     def update(self, instance: Product, validated_data: Any) -> Product:
         request = self.context["request"]
@@ -93,8 +87,6 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
 
         # 새로운 이미지 파일 등록
         if received_new_images:
-            # for image in received_new_images:
-            #     ProductImage.objects.create(product=instance, image=image)
             product_images = [ProductImage(product=instance, image=image) for image in received_new_images]
             ProductImage.objects.bulk_create(product_images)
 
@@ -103,54 +95,3 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-    # def update(self, instance: Product, validated_data: Any) -> Product:
-    #     # 새 이미지 파일 가져오기
-    #     request = self.context["request"]
-    #     received_new_images = request.FILES.getlist("image")
-    #     # 기존 이미지 링크 가져오기
-    #     # received_existing_images = request.data.get("image")
-    #     received_existing_images = request.POST.getlist("image")
-    #
-    #     # db에 있는 이미지 목록 id 가져오기
-    #     existing_images_set = set(instance.images.values_list("id", flat=True))
-    #     # 받은 기존 링크랑 db 링크 비교해서 중복되는것만 고르기
-    #     received_existing_images_set = set()
-    #     if received_existing_images:
-    #         for link in received_existing_images:
-    #             try:
-    #                 # received = ProductImage.objects.get(image=link, product=instance)
-    #                 received = next(img for img in instance.images.all() if img.get_image_url() == link)
-    #                 received_existing_images_set.add(received.id)
-    #             except ProductImage.DoesNotExist:
-    #                 logger.info(f"Image with link {link} does not exist.")
-    #                 continue
-    #     # 새로운 이미지 파일 등록
-    #     new_images = set()
-    #     if received_new_images:
-    #         for image in received_new_images:
-    #             new_image = ProductImage.objects.create(product=instance, image=image)
-    #             new_images.add(new_image.id)
-    #     # 안보낸 이미지 삭제
-    #     images_to_delete_set = existing_images_set - received_existing_images_set
-    #     ProductImage.objects.filter(id__in=images_to_delete_set).delete()
-    #     # product 정보 수정
-    #     for attr, value in validated_data.items():
-    #         setattr(instance, attr, value)
-    #     instance.save()
-    #     return instance
-
-    # def update(self, instance: Product, validated_data: Any) -> Product:
-    #     image_set = self.context["request"].FILES
-    #     existing_images = set(instance.images.values_list("id", flat=True))
-    #     new_images = set()
-    #     if image_set:
-    #         for image in image_set.getlist("image"):
-    #             new_image = ProductImage.objects.create(product=instance, image=image)
-    #             new_images.add(new_image.id)
-    #     images_to_delete = existing_images - new_images
-    #     ProductImage.objects.filter(id__in=images_to_delete).delete()
-    #     for attr, value in validated_data.items():
-    #         setattr(instance, attr, value)
-    #     instance.save()
-    #     return instance
