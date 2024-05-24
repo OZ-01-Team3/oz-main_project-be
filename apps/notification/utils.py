@@ -10,10 +10,9 @@ from django.dispatch import receiver
 from django_redis import get_redis_connection
 from rest_framework.utils.serializer_helpers import ReturnDict
 
-from apps.chat.consumers import ChatConsumer
-from apps.chat.models import Chatroom, Message
+from apps.chat.models import Chatroom
 from apps.chat.serializers import MessageSerializer
-from apps.chat.utils import check_opponent_online
+from apps.chat.utils import check_opponent_online, get_group_name
 from apps.notification import serializers
 from apps.notification.models import (
     GlobalNotification,
@@ -38,21 +37,30 @@ def send_global_notification(sender, instance, created, **kwargs):
         async_to_sync(channel_layer.group_send)(group_name, data)
 
 
-@receiver(post_save, sender=Message)  # type: ignore
-def new_chat_notification(sender, instance, created, **kwargs: Any):
-    """
-    새로운 채팅메시지가 생성되었을 때 상대방이 채팅 소켓에 접속중이지 않다면 알림을 보내줌
-    """
-    # 인스턴스가 저장되고 status가 True인 상태 -> 메시지가 생성되고 읽지 않은상태
-    if created and instance.status is True:
-        chat_group_name = ChatConsumer.get_group_name(instance.chatroom.id)
-        notification_group = get_chat_notification_group_name(instance.chatroom.id)
-        # 상대방이 채팅방에 접속중인지 확인하고 채팅방에 접속하지 않은 상태면 새메시지 알림을 전송
-        if not check_opponent_online(chat_group_name):
-            data = MessageSerializer(instance).data
-            data["message"] = data.pop("text")
-            data["type"] = "chat_notification"
-            async_to_sync(channel_layer.group_send)(notification_group, data)
+# @receiver(post_save, sender=Message)  # type: ignore
+# def new_chat_notification(sender, instance, created, **kwargs: Any):
+#     """
+#     새로운 채팅메시지가 생성되었을 때 상대방이 채팅 소켓에 접속중이지 않다면 알림을 보내줌
+#     """
+#     # 인스턴스가 저장되고 status가 True인 상태 -> 메시지가 생성되고 읽지 않은상태
+#     if created and instance.status is True:
+#         chat_group_name = ChatConsumer.get_group_name(instance.chatroom.id)
+#         notification_group = get_chat_notification_group_name(instance.chatroom.id)
+#         # 상대방이 채팅방에 접속중인지 확인하고 채팅방에 접속하지 않은 상태면 새메시지 알림을 전송
+#         if not check_opponent_online(chat_group_name):
+#             data = MessageSerializer(instance).data
+#             data["message"] = data.pop("text")
+#             data["type"] = "chat_notification"
+#             async_to_sync(channel_layer.group_send)(notification_group, data)
+
+
+def chat_notification(chatroom_id: int, data: dict[str, Any]) -> None:
+    # 상대방이 채팅방에 접속중인지 확인하고 채팅방에 접속하지 않은 상태면 새메시지 알림을 전송
+    notification_group = get_chat_notification_group_name(chatroom_id=chatroom_id)
+    chat_group_name = get_group_name(chatroom_id=chatroom_id)
+    if not check_opponent_online(chat_group_name):
+        data["type"] = "chat_notification"
+        async_to_sync(channel_layer.group_send)(notification_group, data)
 
 
 @receiver(post_save, sender=RentalHistory)  # type: ignore

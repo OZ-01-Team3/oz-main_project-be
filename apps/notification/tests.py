@@ -1,4 +1,6 @@
 import base64
+import json
+
 from datetime import datetime, timedelta
 
 from channels.db import database_sync_to_async
@@ -7,10 +9,12 @@ from channels.testing import WebsocketCommunicator
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TransactionTestCase
 from django.urls import path
+from django_redis import get_redis_connection
 
 from apps.category.models import Category
 from apps.chat.consumers import ChatConsumer
 from apps.chat.models import Chatroom
+from apps.chat.utils import get_group_name
 from apps.notification.consumers import NotificationConsumer
 from apps.notification.models import GlobalNotification, GlobalNotificationConfirm
 from apps.product.models import Product, ProductImage, RentalHistory
@@ -63,6 +67,7 @@ class BaseTestCase(TransactionTestCase):
                 path("ws/chat/<int:chatroom_id>", ChatConsumer.as_asgi()),
             ]
         )
+        self.redis_conn = get_redis_connection("default")
 
 
 class RentalNotificationTestCase(BaseTestCase):
@@ -132,31 +137,35 @@ class ChatNotificationTestCase(BaseTestCase):
 
         # 새로운 채팅 메시지 생성
         # 채팅메시지와 유저 정보 전송하기
-        data = {"message": "Test message", "image": self.encoded_image, "nickname": self.borrower.nickname}
+        data = {"text": "Test message", "image": self.encoded_image, "sender": self.borrower.nickname}
         await chat_communicator.send_json_to(data)
 
         # 메시지가 올바르게 받아졌는지 확인
         message = await chat_communicator.receive_json_from()
-        self.assertEqual(message.get("message"), data["message"])
+        self.assertEqual(message.get("text"), data["text"])
         self.assertTrue(message.get("image"))
-        self.assertEqual(message.get("nickname"), data["nickname"])
+        self.assertEqual(message.get("nickname"), data["sender"])
         self.assertEqual(message.get("type"), "chat_message")
 
-        # 보낸 메시지가 데이터베이스에 올바르게 저장되었는지 확인
+        # 보낸 메시지가 데이터베이스에 저장되지않고 레디스에 올바르게 저장되었는지 확인
         count = await database_sync_to_async(self.chatroom.message_set.count)()
-        self.assertEqual(count, 1)
-        db_message = await database_sync_to_async(self.chatroom.message_set.first)()
-        self.assertEqual(db_message.chatroom.id, self.chatroom.id)
-        self.assertEqual(db_message.text, data["message"])
-        self.assertEqual(db_message.sender_id, self.borrower.id)
-        self.assertEqual(db_message.image.url, message.get("image"))
+        self.assertEqual(count, 0)
+        key = f"{get_group_name(chatroom_id=self.chatroom.id)}_messages"
+
+        stored_message = self.redis_conn.lrange(key, -1, -1)
+        redis_message = json.loads(stored_message[0])
+
+        self.assertEqual(redis_message.get("chatroom_id"), self.chatroom.id)
+        self.assertEqual(redis_message.get("text"), data["text"])
+        self.assertEqual(redis_message.get("sender_id"), self.borrower.id)
+        self.assertEqual(redis_message.get("image"), message.get("image"))
 
         # 메시지의 읽음상태 확인 : 유저 혼자 채팅방에 속한 상황이므로 읽어져선 안됨
-        self.assertTrue(db_message.status)
+        self.assertTrue(redis_message.get("status"))
 
         # 판매자에게 안읽은 메시지 알림이 전송되었는지 확인
-        chat_notification = await notification_communicator.receive_json_from(timeout=10)
-        self.assertEqual(chat_notification["message"], data["message"])
+        chat_notification = await notification_communicator.receive_json_from(timeout=1)
+        self.assertEqual(chat_notification["text"], data["text"])
 
         await notification_communicator.disconnect()
         await chat_communicator.disconnect()
