@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from django.db import models
 
@@ -35,13 +36,17 @@ class Product(BaseModel):
 
 
 def upload_to_s3_product(instance: models.Model, filename: str) -> str:
-    # 파일명은 랜덤한 8자리의 문자열과 업로드한 파일이름을 조합해서 만듦(유일성 보장)
     return f"images/product/{uuid4_generator(length=8)} + {filename}"
 
 
 class ProductImage(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to=upload_to_s3_product)
+
+    def get_image_url(self) -> Any | None:
+        if self.image and hasattr(self.image, "url"):
+            return self.image.url
+        return None
 
 
 class RentalHistory(BaseModel):

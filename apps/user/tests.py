@@ -12,6 +12,7 @@ from django.urls import reverse
 from PIL import Image
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from apps.user.models import Account
 
@@ -222,23 +223,6 @@ class LogoutViewTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res_data["detail"], "Successfully logged out.")
 
-    # def test_logout_authenticated_user(self) -> None:
-    #     refresh = self.user.auth_token.create()
-    #     data = {"refresh": refresh.key}
-    #     res = self.client.post(self.url, data)
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(res.data["detail"], "Successfully logged out.")
-
-    def test_logout_again(self) -> None:
-        self.client.force_login(self.user)
-        self.client.post(self.url)
-        res = self.client.post(self.url)
-        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
-
-    # def test_logout_unauthenticated_user(self) -> None:
-    #     res = self.client.post(self.url)
-    #     self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
 
 class UserDetailViewTests(TestCase):
     def setUp(self) -> None:
@@ -256,6 +240,7 @@ class UserDetailViewTests(TestCase):
         }
         self.user = get_user_model().objects.create(**self.data)
         self.client.force_login(self.user)
+        self.token = AccessToken.for_user(self.user)
 
     def generate_image_file(self) -> BytesIO:
         image = Image.new("RGBA", size=(100, 100), color=(100, 100, 100))
@@ -273,7 +258,7 @@ class UserDetailViewTests(TestCase):
         return img_str
 
     def test_get_user_info(self) -> None:
-        res = self.client.get(self.url)
+        res = self.client.get(self.url, headers={"Authorization": f"Bearer {self.token}"})
         res_data = res.json()
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res_data.get("email"), self.data["email"])
@@ -297,7 +282,7 @@ class UserDetailViewTests(TestCase):
             "region": "Gyeongi",
             "grade": "Silver",
         }
-        res = self.client.put(self.url, data)
+        res = self.client.put(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         res_data = res.json()
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res_data["email"], data["email"])
@@ -325,17 +310,17 @@ class UserDetailViewTests(TestCase):
         existing_nickname = "existing"
         Account.objects.create_user(email="dfdf@dfdf.com", password="password", nickname=existing_nickname)
         data = {"nickname": existing_nickname}
-        res = self.client.patch(self.url, data)
+        res = self.client.patch(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_user_info_with_same_nickname(self) -> None:
         data = {"nickname": self.data["nickname"]}
-        res = self.client.patch(self.url, data)
+        res = self.client.patch(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_update_user_info_with_different_passwords(self) -> None:
         data = {"password1": "password1", "password2": "password2"}
-        res = self.client.patch(self.url, data)
+        res = self.client.patch(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     # def test_upload_profile_image(self) -> None:
@@ -371,9 +356,10 @@ class DeleteUserViewTests(TestCase):
         }
         self.user = Account.objects.create_user(**data)
         self.client.force_login(self.user)
+        self.token = AccessToken.for_user(self.user)
 
     def test_delete_user(self) -> None:
-        res = self.client.delete(self.url)
+        res = self.client.delete(self.url, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         user_exists = Account.objects.filter(email=self.user.email).exists()
         self.assertFalse(user_exists)

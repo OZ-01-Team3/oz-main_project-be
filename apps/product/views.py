@@ -3,12 +3,7 @@ from typing import Any
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-
-# from django.utils.decorators import method_decorator
-# from django.views.decorators.csrf import csrf_exempt
-from django_filters import filters
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.contrib import django_filters
 from requests import Response
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -16,19 +11,24 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.serializers import BaseSerializer
 
-from apps.product.models import Product, RentalHistory
+from apps.product.models import Product, ProductImage, RentalHistory
 from apps.product.permissions import IsLenderOrReadOnly
-from apps.product.serializers import ProductSerializer, RentalHistorySerializer
+from apps.product.serializers import (
+    ProductImageSerializer,
+    ProductSerializer,
+    RentalHistorySerializer,
+)
 
 
+# @method_decorator(cache_page(60 * 60 * 2), name="dispatch")
 class ProductViewSet(viewsets.ModelViewSet[Product]):
-    # queryset = Product.objects.all().prefetch_related('images')
-    queryset = Product.objects.all()
+    # queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsLenderOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ["name", "status", "product_category"]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["status", "product_category", "condition", "size"]
     search_fields = ["name", "lender__nickname"]
+    ordering_fields = ["created_at", "rental_fee", "views"]
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
@@ -36,13 +36,6 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
 
     def get_queryset(self) -> QuerySet[Product]:
         return Product.objects.all().order_by("-created_at")
-
-    # def get_queryset(self):
-    #     qs = super().get_queryset()
-    #     search_name = self.request.query_params.get("name")
-    #     if search_name:
-    #         qs = qs.filter(name__icontains=search_name)
-    #         return qs
 
 
 class RentalHistoryViewSet(viewsets.ModelViewSet[RentalHistory]):
@@ -68,11 +61,3 @@ class RentalHistoryViewSet(viewsets.ModelViewSet[RentalHistory]):
     # # 대여 상태 변경을 위한 라우트 추가
     # def return_rental(self, request, *args, **kwargs):
     #     return self.return_rental_record(request, *args, **kwargs)
-
-
-# class SearchProductViewSet(viewsets.ModelViewSet):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-#     permission_classes = [AllowAny]
-#     filter_backends = [DjangoFilterBackend]
-#     filterset_class = ProductFilter
