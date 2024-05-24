@@ -115,14 +115,14 @@ def get_chat_notification_group_name(chatroom_id: int) -> str:
 #     return other_values
 
 
-def confirm_notification(model: models.Model, notification_id: int, user_id: int) -> None:
+def confirm_notification(command: str, notification_id: int, user_id: int) -> None:
     """
     유저가 확인한 알림을 가져와서 comfirm = True 로 변경
     """
-    if isinstance(model, RentalNotification):
-        model.objects.filter(id=notification_id, recipient_id=user_id).update(confirm=True)
-    if isinstance(model, GlobalNotificationConfirm):
-        model.objects.filter(notification_id=notification_id, user_id=user_id).update(confirm=True)
+    if command == "RentalNotificationConfirm":
+        RentalNotification.objects.filter(id=notification_id, recipient_id=user_id).update(confirm=True)
+    if command == "globalNotificationConfirm":
+        GlobalNotificationConfirm.objects.filter(notification_id=notification_id, user_id=user_id).update(confirm=True)
 
 
 def create_rental_notification(
@@ -157,7 +157,7 @@ def get_unread_chat_notifications(user_id: int) -> list[ReturnDict[Any, Any]]:
     unread_last_messages = []
     if chatroom_list:
         for chatroom in chatroom_list:
-            message = chatroom.message_set.exclude(sender=user_id).filter(status=True).order_by("-timestamp").first()
+            message = chatroom.message_set.exclude(sender=user_id).filter(status=True).order_by("-created_at").first()
             if message:
                 data = MessageSerializer(message).data
                 data["type"] = "chat_notification"

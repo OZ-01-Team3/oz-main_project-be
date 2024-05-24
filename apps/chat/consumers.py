@@ -84,7 +84,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
                 "sender_id": self.scope["user"].id,
                 "chatroom_id": self.chatroom_id,
                 "status": True,
-                "timestamp": timezone.now().isoformat(),
+                "created_at": timezone.now().isoformat(),
             }
 
             # 수신한 데이터에서 이미지가 있으면 데이터에 포함
