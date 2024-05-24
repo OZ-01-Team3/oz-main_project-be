@@ -22,7 +22,7 @@ from apps.product.serializers import (
 
 # @method_decorator(cache_page(60 * 60 * 2), name="dispatch")
 class ProductViewSet(viewsets.ModelViewSet[Product]):
-    queryset = Product.objects.all()
+    # queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsLenderOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -34,8 +34,8 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
         serializer.save(lender=self.request.user)
 
-    # def get_queryset(self) -> QuerySet[Product]:
-    #     return Product.objects.all().order_by("-created_at")
+    def get_queryset(self) -> QuerySet[Product]:
+        return Product.objects.all().order_by("-created_at")
 
 
 class RentalHistoryViewSet(viewsets.ModelViewSet[RentalHistory]):
