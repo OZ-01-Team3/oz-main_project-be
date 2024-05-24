@@ -19,4 +19,5 @@ class CategoryModelTest(TestCase):
         url = reverse("category-list")
         response = client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get("count"), 2)
+        # self.assertEqual(response.data.get("count"), 2)
+        self.assertEqual(len(response.data), 2)
