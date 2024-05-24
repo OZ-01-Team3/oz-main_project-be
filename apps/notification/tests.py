@@ -1,6 +1,5 @@
 import base64
 import json
-
 from datetime import datetime, timedelta
 
 from channels.db import database_sync_to_async
@@ -102,7 +101,7 @@ class RentalNotificationTestCase(BaseTestCase):
         req_notification = await communicator2.receive_json_from()
 
         self.assertEqual(req_notification["product_name"], rental_history.product.name)
-        self.assertEqual(req_notification["product_image"], self.product_image.image.url)
+        self.assertEqual(req_notification["image"], self.product_image.image.url)
         self.assertEqual(req_notification["borrower"], rental_history.borrower.nickname)
         self.assertEqual(req_notification["lender"], rental_history.product.lender.nickname)
         self.assertEqual(req_notification["type"], "rental_notification")
