@@ -250,12 +250,12 @@ class UserDetailViewTests(TestCase):
         file.seek(0)
         return file
 
-    def generate_image_to_base64(self) -> bytes:
-        file = BytesIO()
-        image = Image.new("RGBA", size=(100, 100), color=(155, 0, 0))
-        image.save(file, "png")
-        img_str = base64.b64encode(file.getvalue())
-        return img_str
+    # def generate_image_to_base64(self) -> bytes:
+    #     file = BytesIO()
+    #     image = Image.new("RGBA", size=(100, 100), color=(155, 0, 0))
+    #     image.save(file, "png")
+    #     img_str = base64.b64encode(file.getvalue())
+    #     return img_str
 
     def test_get_user_info(self) -> None:
         res = self.client.get(self.url, headers={"Authorization": f"Bearer {self.token}"})
@@ -323,25 +323,22 @@ class UserDetailViewTests(TestCase):
         res = self.client.patch(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_upload_profile_image(self) -> None:
-    #     image_file = self.generate_image_file()
-    #     data = {"profile_img": image_file}
-    #     res = self.client.patch(self.url, data, format="multipart")
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+    def test_upload_profile_image(self) -> None:
+        image_file = self.generate_image_file()
+        data = {"profile_img": image_file}
+        res = self.client.patch(self.url, data, format="multipart", headers={"Authorization": f"Bearer {self.token}"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     # TODO: 테스트 돌릴 때마다 S3에 올라감 이슈
-    # def test_update_profile_image(self) -> None:
-    #     profile_img = self.generate_image_file()
-    #     data = {
-    #         "email": "user@email.com",
-    #         "profile_img": profile_img
-    #     }
-    #     # Account.objects.create(**data)
-    #     res = self.client.patch(self.url, data, format="multipart")
-    #     image_file = self.generate_image_file()
-    #     data = {"email": "user@email.com", "profile_img": image_file}
-    #     res = self.client.patch(self.url, data, format="multipart")
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+    def test_update_profile_image(self) -> None:
+        profile_img = self.generate_image_file()
+        data = {"email": "user@email.com", "profile_img": profile_img}
+        # Account.objects.create(**data)
+        res = self.client.patch(self.url, data, format="multipart", headers={"Authorization": f"Bearer {self.token}"})
+        image_file = self.generate_image_file()
+        data = {"email": "user@email.com", "profile_img": image_file}
+        res = self.client.patch(self.url, data, format="multipart", headers={"Authorization": f"Bearer {self.token}"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
 
 class DeleteUserViewTests(TestCase):
