@@ -60,10 +60,10 @@ CORS_ORIGIN_WHITELIST = env("ORIGINS").split(",")
 # csrf 관련 설정
 # CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
 CSRF_TRUSTED_ORIGINS = env("ORIGINS").split(",")
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_HTTPONLY = False
 # SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
