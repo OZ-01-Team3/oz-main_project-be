@@ -17,7 +17,7 @@ INSTALLED_APPS += ["debug_toolbar"]
 MIDDLEWARE = (
     ["debug_toolbar.middleware.DebugToolbarMiddleware"]
     + MIDDLEWARE
-    # + ["whitenoise.middleware.WhiteNoiseMiddleware"]
+    + ["whitenoise.middleware.WhiteNoiseMiddleware"]
 )
 
 INTERNAL_IPS = ["127.0.0.1"]
@@ -120,7 +120,9 @@ STORAGES = {
             # "cloudfront_key_id": env("AWS_CLOUDFRONT_KEY_ID")
         },
     },
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
 
 # django 이메일 인증 설정

@@ -26,6 +26,7 @@ class Product(BaseModel):
     status = models.BooleanField(default=True)  # 대여 가능 여부
     amount = models.IntegerField(default=1)
     region = models.CharField(max_length=30, default="None")
+    likes = models.IntegerField(default=0)
 
     def __str__(self) -> str:
         return self.name
