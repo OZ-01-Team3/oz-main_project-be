@@ -15,9 +15,7 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 
 INSTALLED_APPS += ["debug_toolbar"]
 MIDDLEWARE = (
-    ["debug_toolbar.middleware.DebugToolbarMiddleware"]
-    + MIDDLEWARE
-    + ["whitenoise.middleware.WhiteNoiseMiddleware"]
+    ["debug_toolbar.middleware.DebugToolbarMiddleware"] + MIDDLEWARE + ["whitenoise.middleware.WhiteNoiseMiddleware"]
 )
 
 INTERNAL_IPS = ["127.0.0.1"]
