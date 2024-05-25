@@ -23,7 +23,7 @@ class MessageAdmin(admin.ModelAdmin[Message]):
         ("Status", {"fields": ("status",)}),
     )
 
-    list_display = ("chatroom", "sender", "text", "image", "status", "timestamp")
+    list_display = ("chatroom", "sender", "text", "image", "status", "updated_at", "created_at")
     search_fields = ("text", "sender")
     ordering = ("sender",)
 

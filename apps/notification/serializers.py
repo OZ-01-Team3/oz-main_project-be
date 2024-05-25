@@ -42,7 +42,7 @@ class GlobalNotificationConfirmSerializer(serializers.ModelSerializer[GlobalNoti
 
 class RentalNotificationSerializer(serializers.ModelSerializer[RentalNotification]):
     product_name = serializers.CharField(source="rental_history.product.name")  # 상품 이름
-    product_image = serializers.SerializerMethodField()  # 상품 이미지
+    image = serializers.SerializerMethodField()  # 상품 이미지
     borrower = serializers.CharField(source="rental_history.borrower.nickname")  # 빌리는 사람
     lender = serializers.CharField(source="rental_history.product.lender.nickname")  # 판매자
     rental_date = serializers.DateTimeField(source="rental_history.rental_date")  # 대여일
@@ -55,7 +55,7 @@ class RentalNotificationSerializer(serializers.ModelSerializer[RentalNotificatio
             "id",
             "recipient",
             "product_name",
-            "product_image",
+            "image",
             "borrower",
             "lender",
             "rental_date",
@@ -65,7 +65,7 @@ class RentalNotificationSerializer(serializers.ModelSerializer[RentalNotificatio
             "text",
         ]
 
-    def get_product_image(self, obj: RentalNotification) -> Any:
+    def get_image(self, obj: RentalNotification) -> Any:
         product_images: RentalNotification = obj.rental_history.product.images.first()  # type: ignore
         if product_images:
             # 이미지의 URL을 리턴

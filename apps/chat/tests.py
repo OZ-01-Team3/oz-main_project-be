@@ -88,7 +88,7 @@ class ChatRoomTestCase(APITestCase):
             "sender_id": self.lender.id,
             "chatroom_id": chatroom.id,
             "status": True,
-            "timestamp": timezone.now().isoformat(),
+            "created_at": timezone.now().isoformat(),
             "text": f"last chat message",
         }
         self.redis_conn.lpush(key, json.dumps(data))
@@ -135,7 +135,7 @@ class ChatDetailTestCase(APITestCase):
             "sender_id": self.user.id,
             "chatroom_id": self.chatroom.id,
             "status": True,
-            "timestamp": timezone.now().isoformat(),
+            "created_at": timezone.now().isoformat(),
         }
         for i in range(40):
             data["text"] = f"test chat message - {i + 1}"
@@ -161,7 +161,7 @@ class ChatDetailTestCase(APITestCase):
         }
         for i in range(40):
             data["text"] = f"test chat message - {i + 1}"
-            data["timestamp"] = (timezone.now().isoformat(),)
+            data["created_at"] = (timezone.now().isoformat(),)
             if i < 30:
                 Message.objects.create(**data)
             else:

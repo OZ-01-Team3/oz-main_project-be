@@ -4,7 +4,6 @@ from typing import Any
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
-from apps.notification.models import GlobalNotification, GlobalNotificationConfirm
 from apps.notification.utils import (
     confirm_notification,
     create_global_notification_confirm,
@@ -56,20 +55,20 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
     async def global_notification_confirm(self, data: dict[str, Any]) -> None:
         try:
             await database_sync_to_async(confirm_notification)(
-                model=GlobalNotificationConfirm, user_id=self.user.id, notification_id=data["notification_id"]
+                command=data.get("command"), user_id=self.user.id, notification_id=data["notification_id"]
             )
         except Exception as e:
             logger.error("예외 발생: %s", e, exc_info=True)
-            await self.close(1011, reason="알림 읽음 처리시 예외 발생")
+            await self.close(1011, reason="기타 알림 읽음 처리시 예외 발생")
 
     async def rental_notification_confirm(self, data: dict[str, Any]) -> None:
         try:
             await database_sync_to_async(confirm_notification)(
-                model=GlobalNotification, user_id=self.user.id, notification_id=data["notification_id"]
+                command=data.get("command"), user_id=self.user.id, notification_id=data["notification_id"]
             )
         except Exception as e:
             logger.error("예외 발생: %s", e, exc_info=True)
-            await self.close(1011, reason="알림 읽음 처리시 예외 발생")
+            await self.close(1011, reason="대여 알림 읽음 처리시 예외 발생")
 
     async def chat_notification(self, event: dict[str, Any]) -> None:
         try:

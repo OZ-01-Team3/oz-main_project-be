@@ -145,7 +145,7 @@ def get_last_message(chatroom_id: int) -> Optional[dict[str, Any]]:
     if messages:
         from apps.chat.serializers import MessageSerializer
 
-        return MessageSerializer(messages.order_by("-timestamp").first()).data
+        return MessageSerializer(messages.order_by("-created_at").first()).data
 
     return None
 
@@ -167,7 +167,7 @@ def get_chatroom_message(chatroom_id: int) -> Any:
         messages = [json.loads(msg) for msg in stored_messages]
 
         # 데이터베이스에서 30 - stored_message_num을 뺀 개수만큼 가져옴
-        db_messages = Message.objects.filter(chatroom_id=chatroom_id).order_by("-timestamp")
+        db_messages = Message.objects.filter(chatroom_id=chatroom_id).order_by("-created_at")
 
         # 디비에 저장된 메시지가 30-stored_message_num 보다 많으면 슬라이싱해서 필요한 만큼의 데이터를 가져옴
         if db_messages.count() >= 30 - stored_message_num:
@@ -182,7 +182,7 @@ def get_chatroom_message(chatroom_id: int) -> Any:
     db_messages = Message.objects.filter(chatroom_id=chatroom_id)
     if db_messages:
         if db_messages.count() >= 30:
-            serialized_messages = MessageSerializer(db_messages.order_by("-timestamp")[:30], many=True).data
+            serialized_messages = MessageSerializer(db_messages.order_by("-created_at")[:30], many=True).data
             return serialized_messages
 
         serialized_messages = MessageSerializer(db_messages, many=True).data

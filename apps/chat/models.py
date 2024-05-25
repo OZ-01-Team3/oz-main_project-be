@@ -1,5 +1,6 @@
 from django.db import models
 
+from apps.common.models import BaseModel
 from apps.common.utils import uuid4_generator
 from apps.product.models import Product
 from apps.user.models import Account
@@ -21,13 +22,12 @@ class Chatroom(models.Model):
         return f"판매자: {self.borrower.nickname}, 대여자: {self.lender.nickname}의 채팅방"
 
 
-class Message(models.Model):
+class Message(BaseModel):
     chatroom = models.ForeignKey(Chatroom, on_delete=models.CASCADE)
     sender = models.ForeignKey(Account, on_delete=models.CASCADE)
     text = models.TextField()
     image = models.ImageField(upload_to=upload_to_s3_chat, null=True, blank=True)
     status = models.BooleanField(default=True)  # 메시지의 읽음 여부를 처리
-    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return f"{self.sender} : {self.text[:30]}.."
