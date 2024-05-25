@@ -1,6 +1,8 @@
 from ast import literal_eval
 from datetime import timedelta
 
+import sentry_sdk
+
 from tools.secrets import get_secret
 
 from .base import *
@@ -140,6 +142,12 @@ EMAIL_USE_SSL = False  # TODO
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # URL_FRONT = ENV["URL_FRONT"]  # TODO 이건 어디서 나온 설정인지?
 # EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
+
+sentry_sdk.init(
+    dsn=ENV["SENTRY_DSN"],
+    traces_sample_rate=float(ENV["SENTRY_TRACES_SAMPLE_RATE"]),
+    profiles_sample_rate=float(ENV["SENTRY_PROFILES_SAMPLE_RATE"]),
+)
 
 # 커스텀 설정  # TODO
 FRONT_CONFIRM_URL = ENV["FRONT_CONFIRM_URL"]

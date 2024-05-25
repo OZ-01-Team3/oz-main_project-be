@@ -32,6 +32,7 @@ django-stubs-ext = "^5.0.0"
 django-filter = "^24.2"
 whitenoise = "^6.6.0"
 requests = "^2.32.0"
+sentry-sdk = {extras = ["django"], version = "^2.3.1"}
 
 
 [tool.poetry.group.dev.dependencies]
