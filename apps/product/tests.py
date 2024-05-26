@@ -6,7 +6,8 @@
 # from rest_framework.test import APIClient
 #
 # from apps.product.models import Product
-
+#
+#
 # class ProductListAPITest(TestCase):
 #     def setUp(self):
 #         self.client = APIClient()
@@ -71,20 +72,21 @@
 #     self.assertEqual(response.data[1]['product_category_id'], 2)
 #     self.assertEqual(response.data[1]['style_category_id'], 2)
 #     self.assertEqual(response.data[1]['status'], True)
-# def test_product_list_api_view(self):
-#     url = reverse("product_list")
-#     response = self.client.get(url)
-#     self.assertEqual(response.status_code, status.HTTP_200_OK)
-#     self.assertEqual(len(response.data), Product.objects.count())
 #
-# def test_product_create_api_view(self):
-#     url = reverse("product_create")
-#     response = self.client.post(url, self.product_data, format="json")
-#     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#     def test_product_list_api_view(self):
+#         url = reverse("product_list")
+#         response = self.client.get(url)
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         self.assertEqual(len(response.data), Product.objects.count())
 #
-# def test_product_detail_api_view(self):
-#     url = reverse("product_detail", args=[self.product.pk])
-#     response = self.client.get(url)
-#     self.assertEqual(response.status_code, status.HTTP_200_OK)
-#     #내가 셋업에 만든 상품이랑 이 뷰에서 조회 하고자 하는 상품의 데이터가 일치 하는 지를 확인해야함
+#     def test_product_create_api_view(self):
+#         url = reverse("product_create")
+#         response = self.client.post(url, self.product_data, format="json")
+#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#
+#     def test_product_detail_api_view(self):
+#         url = reverse("product_detail", args=[self.product.pk])
+#         response = self.client.get(url)
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         #내가 셋업에 만든 상품이랑 이 뷰에서 조회 하고자 하는 상품의 데이터가 일치 하는 지를 확인해야함
 #

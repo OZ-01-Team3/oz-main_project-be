@@ -9,6 +9,7 @@ from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
 from rest_framework.utils.serializer_helpers import ReturnDict
 
+from apps.category.models import Style
 from apps.product.models import Product, ProductImage, RentalHistory
 from apps.user.serializers import UserInfoSerializer
 
@@ -35,6 +36,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
     # rental_history = RentalHistorySerializer(many=True, read_only=True)
     # images = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
+    # styles = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -64,10 +66,23 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
         )
         read_only_fields = ("created_at", "updated_at", "views", "lender", "status", "likes")
 
+    def set_styles(self, styles_data):
+        styles = []
+        for style in styles_data:
+            style_name = style.name
+            style_item, _ = Style.objects.get_or_create(name=style_name)
+            styles.append(style)
+        return styles
+
     @transaction.atomic
     def create(self, validated_data: Any) -> Product:
         image_set = self.context["request"].FILES.getlist("image")
+        styles_data = validated_data.pop("styles", [])
         product = Product.objects.create(**validated_data)
+
+        styles = self.set_styles(styles_data)
+        product.styles.set(styles)
+
         if image_set:
             product_images = [ProductImage(product=product, image=image) for image in image_set]
             ProductImage.objects.bulk_create(product_images)
@@ -78,6 +93,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
         request = self.context["request"]
         received_new_images = request.FILES.getlist("image")
         received_existing_images = request.POST.getlist("image")
+        styles_data = validated_data.pop("styles", [])
 
         # 기존 이미지와 받은 이미지 id 비교해서 다시 안 온 이미지 삭제
         existing_images = {img.get_image_url(): img.id for img in instance.images.all()}
@@ -96,4 +112,8 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+
+        # styles 태그 등록
+        styles = self.set_styles(styles_data)
+        instance.styles.set(styles)
         return instance
