@@ -3,6 +3,7 @@ from typing import Any
 
 from django.db import models
 
+from apps.category.models import Style
 from apps.common.models import BaseModel
 from apps.common.utils import uuid4_generator
 from apps.user.models import Account
@@ -22,7 +23,7 @@ class Product(BaseModel):
     size = models.CharField(max_length=10)  # 사이즈
     views = models.IntegerField(default=0)  # 조회수
     product_category = models.ForeignKey("category.Category", on_delete=models.CASCADE, related_name="products")
-    # style_category = models.ManyToManyField(StyleCategory)
+    styles = models.ManyToManyField(Style, blank=True, related_name="products")
     status = models.BooleanField(default=True)  # 대여 가능 여부
     amount = models.IntegerField(default=1)
     region = models.CharField(max_length=30, default="None")

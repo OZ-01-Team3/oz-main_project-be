@@ -52,6 +52,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "size",
             "views",
             "product_category",
+            "styles",
             "status",
             "amount",
             "region",

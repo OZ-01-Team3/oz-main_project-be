@@ -20,6 +20,7 @@ urlpatterns = [
     path("api/chat/", include("apps.chat.urls")),
     path("api/products/", include("apps.product.urls")),
     path("api/likes/", include("apps.like.urls")),
+    path("api/mypage/", include("apps.mypage.urls")),
 ]
 
 if settings.DEBUG:
