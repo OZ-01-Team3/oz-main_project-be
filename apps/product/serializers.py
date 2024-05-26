@@ -10,6 +10,7 @@ from rest_framework.fields import ReadOnlyField
 from rest_framework.utils.serializer_helpers import ReturnDict
 
 from apps.category.models import Style
+from apps.like.models import Like
 from apps.product.models import Product, ProductImage, RentalHistory
 from apps.user.serializers import UserInfoSerializer
 
@@ -36,7 +37,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
     # rental_history = RentalHistorySerializer(many=True, read_only=True)
     # images = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
-    # styles = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -62,9 +63,16 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "updated_at",
             "images",
             "likes",
+            "is_liked",
             # "rental_history",
         )
-        read_only_fields = ("created_at", "updated_at", "views", "lender", "status", "likes")
+        read_only_fields = ("created_at", "updated_at", "views", "lender", "status", "likes", "is_liked")
+
+    def get_is_liked(self, obj) -> bool:
+        user = self.context["request"].user
+        if user.is_authenticated:
+            return Like.objects.filter(user=user, product=obj).exists()
+        return False
 
     def set_styles(self, styles_data):
         styles = []
