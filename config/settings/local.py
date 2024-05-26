@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 
 import environ
+import sentry_sdk
 
 from .base import *
 
@@ -198,6 +199,12 @@ LOGGING = {
         },
     },
 }
+
+# sentry_sdk.init(
+#     dsn=env("SENTRY_DSN"),
+#     traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE"),
+#     profiles_sample_rate=env.float("SENTRY_PROFILES_SAMPLE_RATE"),
+# )
 
 # 커스텀 설정  # TODO
 FRONT_CONFIRM_URL = env("FRONT_CONFIRM_URL")
