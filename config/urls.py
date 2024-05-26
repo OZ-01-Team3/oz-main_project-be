@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/categories/", include("apps.category.urls")),
     path("api/chat/", include("apps.chat.urls")),
     path("api/products/", include("apps.product.urls")),
+    path("api/likes/", include("apps.like.urls")),
 ]
 
 if settings.DEBUG:

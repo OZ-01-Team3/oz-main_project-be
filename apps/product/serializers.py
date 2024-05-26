@@ -58,9 +58,10 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "created_at",
             "updated_at",
             "images",
+            "likes",
             # "rental_history",
         )
-        read_only_fields = ("created_at", "updated_at", "views", "lender", "status")
+        read_only_fields = ("created_at", "updated_at", "views", "lender", "status", "likes")
 
     @transaction.atomic
     def create(self, validated_data: Any) -> Product:

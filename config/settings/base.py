@@ -67,6 +67,7 @@ CUSTOM_USER_APPS = [
     "apps.product",
     "apps.chat",
     "apps.notification",
+    "apps.like",
 ]
 
 INSTALLED_APPS = DJANGO_SYSTEM_APPS + CUSTOM_USER_APPS
