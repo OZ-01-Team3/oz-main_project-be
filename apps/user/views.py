@@ -1,40 +1,23 @@
-import logging
 from typing import Any
+from urllib.request import urlopen
 
-from allauth.account import app_settings
-from allauth.account import app_settings as allauth_account_settings
-from allauth.account import app_settings as allauth_settings
-from allauth.account.models import (
-    EmailConfirmation,
-    EmailConfirmationHMAC,
-    get_emailconfirmation_model,
-)
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+import requests
 from dj_rest_auth.app_settings import api_settings
-from dj_rest_auth.models import get_token_model
-from dj_rest_auth.registration.views import RegisterView, SocialLoginView
+from dj_rest_auth.jwt_auth import set_jwt_cookies
+from dj_rest_auth.registration.views import RegisterView
 from dj_rest_auth.utils import jwt_encode
 from dj_rest_auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache
-from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.core.files.base import ContentFile
 from django.utils import timezone
-from drf_spectacular.utils import (
-    extend_schema,
-    extend_schema_serializer,
-    extend_schema_view,
-    inline_serializer,
-)
-from rest_framework import permissions, serializers, status
-from rest_framework.exceptions import NotFound
-from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny
+from drf_spectacular.utils import extend_schema
+from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.common.utils import uuid4_generator
 from apps.user.api_schema import (
     ConfirmRequestSchema,
     ConfirmResponseSchema,
@@ -48,11 +31,6 @@ from apps.user.api_schema import (
 from apps.user.models import Account
 from apps.user.serializers import ConfirmEmailSerializer, SendCodeSerializer
 from apps.user.utils import generate_confirmation_code, send_email
-
-# class GoogleLogin(SocialLoginView):
-#     adapter_class = GoogleOAuth2Adapter
-#     callback_url = api_settings.GOOGLE_OAUTH2_URL
-#     client_class = OAuth2Client
 
 
 @extend_schema(request=SignupRequestSchema, responses=SignupResponseSchema)
@@ -125,8 +103,6 @@ class CustomLoginView(LoginView):  # type: ignore
         data.pop("user", None)
         response = Response(data, status=status.HTTP_200_OK)
         if api_settings.USE_JWT:
-            from dj_rest_auth.jwt_auth import set_jwt_cookies
-
             set_jwt_cookies(response, self.access_token, self.refresh_token)
         return response
 
@@ -172,6 +148,188 @@ class ConfirmEmailView(APIView):
             return Response({"error": "Invalid confirmation code."}, status=status.HTTP_400_BAD_REQUEST)
         cache.delete(email)
         return Response({"message": "Email confirmation successful."}, status=status.HTTP_200_OK)
+
+
+class KakaoLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        code = request.data.get("code")  # 프론트에서 보내준 코드
+        # 카카오 oauth 토큰 발급 url로 code가 담긴 post 요청을 보내 응답을 받는다.
+        CLIENT_ID = settings.KAKAO_CLIENT_ID
+        REDIRECT_URI = settings.REDIRECT_URI
+        token_response = requests.post(
+            "https://kauth.kakao.com/oauth/token",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": REDIRECT_URI,
+                "client_id": CLIENT_ID,
+            },
+        )
+
+        if token_response.status_code != status.HTTP_200_OK:
+            return Response(
+                {"msg": "카카오 서버로 부터 토큰을 받아오는데 실패하였습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        # 응답으로부터 액세스 토큰을 가져온다.
+        access_token = token_response.json().get("access_token")
+        response = requests.get(
+            "https://kapi.kakao.com/v2/user/me",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+            },
+        )
+
+        if response.status_code != status.HTTP_200_OK:
+            return Response(
+                {"msg": "카카오 서버로 부터 프로필 데이터를 받아오는데 실패하였습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        response_data = response.json()
+        kakao_account = response_data["kakao_account"]
+        profile = kakao_account.get("profile")
+        requests.post("https://kapi.kakao.com/v1/user/logout", headers={"Authorization": f"Bearer {access_token}"})
+        try:
+            user = Account.objects.get(email=kakao_account.get("email"))
+            access_token, refresh_token = jwt_encode(user)
+            response = Response(
+                {
+                    "access": str(access_token),
+                    "refresh": str(refresh_token),  # type: ignore
+                    "email": user.email,
+                    "nickname": user.nickname,
+                    "profile_image": user.profile_img.url,
+                },
+                status=status.HTTP_200_OK,
+            )
+            # set_jwt_cookies(response, access_token, refresh_token)
+            return response  # type: ignore
+
+        except Account.DoesNotExist:
+            # 이미지를 다운로드하여 파일 객체로 가져옴
+            image_response = urlopen(profile.get("profile_image_url"))
+            image_content = image_response.read()
+            kakao_profile_image = ContentFile(image_content, name=f"kakao-profile-{uuid4_generator(8)}.jpg")
+            user = Account.objects.create(
+                email=kakao_account.get("email"),
+                nickname=profile.get("nickname"),
+                profile_img=kakao_profile_image,
+            )
+            user.set_unusable_password()
+            access_token, refresh_token = jwt_encode(user)
+            response = Response(
+                {
+                    "access": str(access_token),
+                    "refresh": str(refresh_token),  # type: ignore
+                    "email": user.email,
+                    "nickname": user.nickname,
+                    "profile_image": user.profile_img.url,
+                },
+                status=status.HTTP_200_OK,
+            )
+            # set_jwt_cookies(response, access_token, refresh_token)
+            return response  # type: ignore
+        except Exception as e:
+            return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request: Request) -> Response:
+        code = request.data.get("code")
+
+        client_id = settings.GOOGLE_CLIENT_ID
+        client_secret = settings.GOOGLE_SECRET
+        redirect_uri = settings.REDIRECT_URI
+
+        if not code:
+            return Response({"msg": "인가코드가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 인가코드를 통해 토큰을 가져오는 요청
+        token_req = requests.post(
+            # f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={redirect_uri}"
+            "https://oauth2.googleapis.com/token",
+            headers={
+                "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+            },
+            data={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "code": code,
+                "grant_type": "authorization_code",
+                "redirect_uri": redirect_uri
+            },
+        )
+        # 요청의 응답을 json 파싱
+        token_req_json = token_req.json()
+        if token_req_json.status_code != 200:
+            return Response({"msg": token_req_json.get("error")}, status=status.HTTP_400_BAD_REQUEST)
+        # 파싱된 데이터중 액세스 토큰을 가져옴
+        google_access_token = token_req_json.get("access_token")
+
+        # 가져온 액세스토큰을 통해 사용자 정보에 접근하는 요청
+        info_response = requests.get(
+            f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={google_access_token}"
+        )
+
+        # 상태코드로 요청이 실패했는지 확인
+        if info_response.status_code != 200:
+            return Response(
+                {"message": "구글 api로부터 액세스토큰을 받아오는데 실패했습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # 요청의 응답을 json 파싱
+        res_json = info_response.json()
+        # 파싱된 데이터중 이메일값을 가져옴
+        email = res_json.get("email")
+        # 파싱된 데이터중 닉네임을 가져옴
+        nickname = res_json.get("nickname")
+        try:
+            user = Account.objects.get(email=email)
+            access_token, refresh_token = jwt_encode(user)
+            response_data = {
+                "access": str(access_token),
+                "refresh": str(refresh_token),
+                "email": user.email,
+                "nickname": user.nickname
+            }
+            if user.profile_img:
+                response_data["profile_image"] = user.profile_img.url
+            response = Response(response_data, status=status.HTTP_200_OK)
+            # if api_settings.USE_JWT:
+            #     set_jwt_cookies(response, access_token, refresh_token)
+            return response
+        except Account.DoesNotExist:
+            # 파싱된 데이터에서 프로필 이미지 url을 가져와서 파일로 변환
+            image_response = urlopen(res_json.get("picture"))
+            image_content = image_response.read()
+            google_profile_image = ContentFile(image_content, name=f"google-profile-{uuid4_generator(8)}.jpg")
+            # 가져온 이메일, 닉네임, 프로필 이미지를 통해 유저 생성
+            user = Account.objects.create(email=email, nickname=nickname, profile_img=google_profile_image)
+            user.set_unusable_password()
+            access_token, refresh_token = jwt_encode(user)
+            response_data = {
+                "access": str(access_token),
+                "refresh": str(refresh_token),
+                "email": user.email,
+                "nickname": user.nickname
+            }
+            if user.profile_img:
+                response_data["profile_image"] = user.profile_img.url
+            response = Response(response_data, status=status.HTTP_200_OK)
+            # if api_settings.USE_JWT:
+            #     set_jwt_cookies(response, access_token, refresh_token)
+            return response
+
+        except Exception as e:
+            # 가입이 필요한 회원
+            return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # class CustomConfirmEmailView(APIView):

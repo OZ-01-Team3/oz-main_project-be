@@ -40,10 +40,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
             chatroom = await self.get_chatroom(self.chatroom_id)
 
             if chatroom is None:
-                await self.close(code=1008, reason="해당 채팅방이 존재하지 않습니다.")
+                raise ValueError("해당 채팅방이 존재하지 않습니다.")
             user = self.scope["user"]
             if not await database_sync_to_async(check_entered_chatroom)(chatroom, user):
-                await self.close(code=1008, reason="해당 채팅방에 존재하는 유저가 아닙니다.")
+                raise ValueError("해당 채팅방에 존재하는 유저가 아닙니다.")
             await self.channel_layer.group_add(self.chat_group_name, self.channel_name)
             await self.accept()
             if check_opponent_online(self.chat_group_name):
@@ -62,6 +62,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
                         "opponent_state": "offline",
                     },
                 )
+        except ValueError as e:
+            logger.error("예외 발생: %s", e, exc_info=True)
+            await self.close(code=1008, reason=str(e))
         except Exception as e:
             logger.error("예외 발생: %s", e, exc_info=True)
             await self.close(code=1011, reason=str(e))

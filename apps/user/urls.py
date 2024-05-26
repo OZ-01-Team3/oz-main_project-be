@@ -17,6 +17,8 @@ from apps.user.views import (
     CustomLoginView,
     CustomSignupView,
     DeleteUserView,
+    KakaoLoginView,
+    GoogleLoginView,
     SendCodeView,
 )
 
@@ -32,6 +34,8 @@ urlpatterns = [
     path("password/reset/confirm/", PasswordResetConfirmView.as_view(), name="rest_password_reset_confirm"),
     # path('login/', LoginView.as_view(), name='rest_login'),
     path("login/", CustomLoginView.as_view(), name="login"),
+    path("login/social/kakao/", KakaoLoginView.as_view(), name="kakao_login"),
+    path("login/social/google/", GoogleLoginView.as_view(), name="google_login"),
     path("logout/", LogoutView.as_view(), name="rest_logout"),
     path("detail/", UserDetailsView.as_view(), name="rest_user_details"),
     path("leave/", DeleteUserView.as_view(), name="delete-user"),
@@ -42,5 +46,4 @@ urlpatterns = [
     # re_path(r"^confirm-email/(?P<key>[-:\w]+)/$", CustomConfirmEmailView.as_view(), name="account_confirm_email"),
     path("send-code/", SendCodeView.as_view(), name="send-code"),
     path("confirm-email/", ConfirmEmailView.as_view(), name="confirm-email"),
-    # path("google/", GoogleLogin.as_view(), name="google_login")
 ]
