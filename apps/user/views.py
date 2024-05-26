@@ -262,7 +262,7 @@ class GoogleLoginView(APIView):
                 "client_secret": client_secret,
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": redirect_uri
+                "redirect_uri": redirect_uri,
             },
         )
         # 요청의 응답을 json 파싱
@@ -297,7 +297,7 @@ class GoogleLoginView(APIView):
                 "access": str(access_token),
                 "refresh": str(refresh_token),
                 "email": user.email,
-                "nickname": user.nickname
+                "nickname": user.nickname,
             }
             if user.profile_img:
                 response_data["profile_image"] = user.profile_img.url
@@ -318,7 +318,7 @@ class GoogleLoginView(APIView):
                 "access": str(access_token),
                 "refresh": str(refresh_token),
                 "email": user.email,
-                "nickname": user.nickname
+                "nickname": user.nickname,
             }
             if user.profile_img:
                 response_data["profile_image"] = user.profile_img.url

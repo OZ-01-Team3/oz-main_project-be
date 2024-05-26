@@ -17,8 +17,8 @@ from apps.user.views import (
     CustomLoginView,
     CustomSignupView,
     DeleteUserView,
-    KakaoLoginView,
     GoogleLoginView,
+    KakaoLoginView,
     SendCodeView,
 )
 
