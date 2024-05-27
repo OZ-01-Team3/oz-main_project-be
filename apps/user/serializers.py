@@ -69,12 +69,6 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
                 instance.set_password(password1)
             else:
                 raise serializers.ValidationError("Passwords don't match")
-
-        # styles_data = validated_data.pop("styles", [])
-        # instance.styles.clear()
-        # styles = self.set_styles(styles_data)
-        # instance.styles.set(styles)
-
         return super().update(instance, validated_data)
 
 
