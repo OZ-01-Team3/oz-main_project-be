@@ -68,13 +68,13 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
         )
         read_only_fields = ("created_at", "updated_at", "views", "lender", "status", "likes", "is_liked")
 
-    def get_is_liked(self, obj) -> bool:
+    def get_is_liked(self, obj: Product) -> bool:
         user = self.context["request"].user
         if user.is_authenticated:
             return Like.objects.filter(user=user, product=obj).exists()
         return False
 
-    def set_styles(self, styles_data):
+    def set_styles(self, styles_data: list[Style]) -> list[Style]:
         styles = []
         for style in styles_data:
             style_name = style.name

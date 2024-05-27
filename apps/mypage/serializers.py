@@ -6,7 +6,7 @@ from apps.product.models import Product
 from apps.product.serializers import ProductImageSerializer
 
 
-class MyProductSerializer(serializers.ModelSerializer):
+class MyProductSerializer(serializers.ModelSerializer[Product]):
     images = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
@@ -31,4 +31,5 @@ class MyProductSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "images",
+            "likes",
         )
