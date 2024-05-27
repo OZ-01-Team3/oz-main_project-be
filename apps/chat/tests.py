@@ -146,8 +146,8 @@ class ChatDetailTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data.get("messages")), 30)
-        self.assertEqual(response.data["messages"][0]["text"], "test chat message - 40")
-        self.assertEqual(response.data["messages"][-1]["text"], "test chat message - 11")
+        self.assertEqual(response.data["messages"][0]["text"], "test chat message - 11")
+        self.assertEqual(response.data["messages"][-1]["text"], "test chat message - 40")
         # 테스트가 끝나면 레디스의 자원을 정리
         self.redis_conn.delete(key)
 
@@ -175,8 +175,8 @@ class ChatDetailTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data.get("messages")), 30)
-        self.assertEqual(response.data["messages"][0]["text"], "test chat message - 40")
-        self.assertEqual(response.data["messages"][-1]["text"], "test chat message - 11")
+        self.assertEqual(response.data["messages"][0]["text"], "test chat message - 11")
+        self.assertEqual(response.data["messages"][-1]["text"], "test chat message - 40")
 
         # 테스트가 끝나면 레디스의 자원을 정리
         self.redis_conn.delete(key)
