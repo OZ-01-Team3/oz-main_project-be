@@ -119,10 +119,12 @@ def confirm_notification(command: str, notification_id: int, user_id: int) -> No
     """
     유저가 확인한 알림을 가져와서 comfirm = True 로 변경
     """
-    if command == "RentalNotificationConfirm":
-        RentalNotification.objects.filter(id=notification_id, recipient_id=user_id).update(confirm=True)
-    if command == "globalNotificationConfirm":
-        GlobalNotificationConfirm.objects.filter(notification_id=notification_id, user_id=user_id).update(confirm=True)
+    if command == "rental_notification_confirm":
+        RentalNotification.objects.filter(id=notification_id, recipient_id=user_id, confirm=False).update(confirm=True)
+    if command == "global_notification_confirm":
+        GlobalNotificationConfirm.objects.filter(
+            notification_id=notification_id, user_id=user_id, confirm=False
+        ).update(confirm=True)
 
 
 def create_rental_notification(
@@ -167,9 +169,11 @@ def get_unread_chat_notifications(user_id: int) -> list[ReturnDict[Any, Any]]:
 
 def get_unread_notifications(user_id: int) -> dict[str, Any]:
     result: dict[str, Any] = {}
-    unread_global_notification = GlobalNotificationConfirm.objects.filter(user_id=user_id, confirm=False)
+    unread_global_notification = GlobalNotification.objects.filter(
+        globalnotificationconfirm__user_id=user_id, globalnotificationconfirm__confirm=False
+    )
     if unread_global_notification:
-        result["global_notification"] = serializers.GlobalNotificationConfirmSerializer(
+        result["global_notification"] = serializers.GlobalNotificationSerializer(
             unread_global_notification, many=True
         ).data
 

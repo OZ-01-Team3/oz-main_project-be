@@ -15,7 +15,11 @@ from apps.chat.consumers import ChatConsumer
 from apps.chat.models import Chatroom
 from apps.chat.utils import get_group_name
 from apps.notification.consumers import NotificationConsumer
-from apps.notification.models import GlobalNotification, GlobalNotificationConfirm
+from apps.notification.models import (
+    GlobalNotification,
+    GlobalNotificationConfirm,
+    RentalNotification,
+)
 from apps.product.models import Product, ProductImage, RentalHistory
 from apps.user.models import Account
 
@@ -109,6 +113,29 @@ class RentalNotificationTestCase(BaseTestCase):
         self.assertEqual(req_notification["return_date"], rental_history.return_date.isoformat())
         self.assertEqual(req_notification["rental_date"], rental_history.rental_date.isoformat())
 
+        # 대여 알림이 생성되었는지 테스트
+        self.assertTrue(
+            await database_sync_to_async(
+                RentalNotification.objects.filter(
+                    recipient=self.lender, rental_history=rental_history, confirm=False
+                ).exists
+            )()
+        )
+
+        rental_notification = await database_sync_to_async(RentalNotification.objects.get)(
+            recipient=self.lender, rental_history=rental_history, confirm=False
+        )
+
+        # 알림읽기테스트
+        await communicator2.send_json_to(
+            {"command": "rental_notification_confirm", "notification_id": rental_notification.id}
+        )
+        updated_confirm = await database_sync_to_async(RentalNotification.objects.get)(
+            rental_history=rental_history, recipient=self.lender
+        )
+        self.assertFalse(updated_confirm.confirm)
+
+        # 소켓 연결 해제
         await communicator1.disconnect()
         await communicator2.disconnect()
 
@@ -240,16 +267,16 @@ class GlobalNotificationTestCase(TransactionTestCase):
         # 유저1의 알림 읽기 테스트
         await communicator1.send_json_to({"command": "global_notification_confirm", "notification_id": notification.id})
         user1_confirm_instance = await database_sync_to_async(GlobalNotificationConfirm.objects.get)(
-            notification=notification, user=self.user1, confirm=False
+            notification=notification, user=self.user1
         )
         self.assertFalse(user1_confirm_instance.confirm)
 
         # 유저2의 알림 읽기 테스트
         await communicator1.send_json_to({"command": "global_notification_confirm", "notification_id": notification.id})
-        user1_confirm_instance = await database_sync_to_async(GlobalNotificationConfirm.objects.get)(
-            notification=notification, user=self.user1, confirm=False
+        user2_confirm_instance = await database_sync_to_async(GlobalNotificationConfirm.objects.get)(
+            notification=notification, user=self.user2
         )
-        self.assertFalse(user1_confirm_instance.confirm)
+        self.assertFalse(user2_confirm_instance.confirm)
 
         # 소켓 정리
         await communicator1.disconnect()
