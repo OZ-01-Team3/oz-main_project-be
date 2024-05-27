@@ -6,6 +6,8 @@ from django.conf import settings
 from django.db.models import Model
 from rest_framework import exceptions, serializers
 
+from apps.category.models import Style
+from apps.category.serializers import StyleSerializer
 from apps.user.models import Account
 
 
@@ -34,6 +36,7 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
     region = serializers.CharField(required=False, allow_blank=True)
     grade = serializers.CharField(required=False, allow_blank=True)
     profile_img = serializers.ImageField(required=False, use_url=True, allow_empty_file=True, allow_null=True)
+    # styles = StyleSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = Account
@@ -49,6 +52,7 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
             "region",
             "grade",
             "profile_img",
+            # "styles",
         )
 
     def validate_nickname(self, nickname: str) -> str:
@@ -65,6 +69,12 @@ class UserInfoSerializer(UserDetailsSerializer):  # type: ignore
                 instance.set_password(password1)
             else:
                 raise serializers.ValidationError("Passwords don't match")
+
+        # styles_data = validated_data.pop("styles", [])
+        # instance.styles.clear()
+        # styles = self.set_styles(styles_data)
+        # instance.styles.set(styles)
+
         return super().update(instance, validated_data)
 
 

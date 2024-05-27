@@ -26,9 +26,9 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsLenderOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["status", "product_category", "condition", "size", "style"]
+    filterset_fields = ["status", "product_category", "condition", "size", "styles"]
     search_fields = ["name", "lender__nickname"]
-    ordering_fields = ["created_at", "rental_fee", "views"]
+    ordering_fields = ["created_at", "rental_fee", "views", "likes"]
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
