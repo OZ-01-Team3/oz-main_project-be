@@ -4,7 +4,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.db import models
 
-from apps.category.models import Category
+from apps.category.models import Category, Style
 from apps.common.models import BaseModel
 from apps.common.utils import uuid4_generator
 
@@ -44,7 +44,7 @@ class Account(AbstractBaseUser, PermissionsMixin, BaseModel):
     region = models.CharField(max_length=30, null=True, blank=True)
     phone = models.CharField(max_length=15)
     grade = models.CharField(max_length=10, null=True, blank=True)
-    # interest_cate = models.ManyToManyField(Category, blank=True)
+    # styles = models.ManyToManyField(Style, blank=True)
     profile_img = models.ImageField(upload_to=upload_to_s3_account, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
