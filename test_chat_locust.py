@@ -9,6 +9,7 @@ from typing import Union
 from django.db.models import Q
 from locust import between, task
 from locust_plugins.users.socketio import SocketIOUser
+from websocket import WebSocketConnectionClosedException
 
 # Django 설정 모듈 지정
 os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.settings"
@@ -95,7 +96,22 @@ class WebSocketUser(SocketIOUser):
 
     def on_message(self, message: bytes) -> None:
         try:
-            response = json.loads(message)
-            print(f"Received: {response}")
+            if message:
+                response = json.loads(message)
+                print(f"Received: {response}")
         except json.JSONDecodeError:
-            print(f"Received message is not valid JSON: {json.loads(message)}")
+            print(f"Received message is not valid JSON")
+
+    def on_stop(self) -> None:
+        self.ws.close()
+
+    def receive_loop(self):
+        while True:
+            try:
+                message = self.ws.recv()
+                import logging
+                logging.debug(f"WSR: {message}")
+                self.on_message(message)
+            except WebSocketConnectionClosedException as e:
+                print(f"소켓 연결 종료됨 \nMessage :{e}")
+                break

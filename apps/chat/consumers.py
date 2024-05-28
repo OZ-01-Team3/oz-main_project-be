@@ -1,4 +1,6 @@
+import asyncio
 import logging
+from collections import defaultdict
 from typing import Any, Optional
 
 from asgiref.sync import sync_to_async
@@ -18,13 +20,14 @@ from apps.chat.utils import (
     save_remaining_messages_to_postgres,
 )
 from apps.notification.utils import chat_notification
-from apps.user.models import Account
 
 logger = logging.getLogger(__name__)
 redis_conn = get_redis_connection("default")
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
+    disconnect_locks = defaultdict(asyncio.Lock)
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.chat_group_name = ""
@@ -122,11 +125,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):  # type: ignore
 
     # 소켓 연결 해제
     async def disconnect(self, close_code: int) -> None:
-        # 레디스에 남은 메시지들을 데이터베이스에 저장
-        if redis_conn.exists(f"{self.chat_group_name}_messages") and not check_opponent_online(self.chat_group_name):
-            await database_sync_to_async(save_remaining_messages_to_postgres)(self.chat_group_name)
-        # 레디스에 남은 그룹들 모두 해제
-        await self.channel_layer.group_discard(self.chat_group_name, self.channel_name)
+        lock = ChatConsumer.disconnect_locks[self.chat_group_name]
+        # print(f"user id: {self.scope["user"].id} get disconnect lock")
+        async with lock:
+            # 레디스에 남은 메시지들을 데이터베이스에 저장
+            if redis_conn.exists(f"{self.chat_group_name}_messages") and not check_opponent_online(self.chat_group_name):
+                await database_sync_to_async(save_remaining_messages_to_postgres)(self.chat_group_name)
+            # 레디스에 남은 그룹들 모두 해제
+            await self.channel_layer.group_discard(self.chat_group_name, self.channel_name)
 
     async def alert(self, event: dict[str, Any]) -> None:
         try:
