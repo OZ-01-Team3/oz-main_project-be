@@ -1,11 +1,10 @@
 import json
 import os
-import requests
-import django
-
 from random import choice
 from typing import Union
 
+import django
+import requests
 from django.db.models import Q
 from locust import between, task
 from locust_plugins.users.socketio import SocketIOUser
@@ -54,11 +53,7 @@ class WebSocketUser(SocketIOUser):
         self.sender = choice([self.borrower, self.lender])
         # 선택된 유저로 로그인 요청 보내고 csrf, access 토큰 가져오기
         login_req = requests.post(
-            "http://localhost:8000/api/users/login/",
-            data={
-                "email": self.sender.email,
-                "password": "password123@"
-            }
+            "http://localhost:8000/api/users/login/", data={"email": self.sender.email, "password": "password123@"}
         )
         csrf = login_req.cookies.get("csrftoken")
         session_cookie = login_req.cookies.get("sessionid")
@@ -105,11 +100,12 @@ class WebSocketUser(SocketIOUser):
     def on_stop(self) -> None:
         self.ws.close()
 
-    def receive_loop(self):
+    def receive_loop(self) -> None:
         while True:
             try:
                 message = self.ws.recv()
                 import logging
+
                 logging.debug(f"WSR: {message}")
                 self.on_message(message)
             except WebSocketConnectionClosedException as e:
