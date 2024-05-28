@@ -1,14 +1,13 @@
 import json
 import os
+from random import choice
+from typing import Union
 
 import django
-from random import choice
-
 from django.db.models import Q
 from locust import between, task
 from locust.user.users import HttpUser
 from locust_plugins.users.socketio import SocketIOUser
-
 
 # Django 설정 모듈 지정
 os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.settings"
@@ -16,10 +15,12 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings.settings"
 # Django 초기화
 django.setup()
 
+from apps.chat.models import Chatroom
 
-def get_test_chatroom_info():
+
+def get_test_chatroom_info():  # type: ignore
     # Q 객체를 사용하여 OR 조건으로 필터링
-    from apps.chat.models import Chatroom
+
     filtered_chatrooms = Chatroom.objects.filter(
         Q(borrower__nickname__icontains="test") | Q(lender__nickname__icontains="test")
     )
@@ -27,16 +28,20 @@ def get_test_chatroom_info():
     return filtered_chatrooms.values("id", "borrower", "lender")
 
 
-def get_account_model(user_id):
-    from apps.user.models import Account
+from apps.user.models import Account
+
+
+def get_account_model(user_id: int) -> Account:
+
     return Account.objects.get(id=user_id)
 
+
 # 채팅방 데이터 리스트
-chatrooms = get_test_chatroom_info()
+chatrooms = get_test_chatroom_info()  # type: ignore
 
 
 class WebSocketUser(SocketIOUser, HttpUser):
-    wait_time = between(1, 5)
+    wait_time = between(1, 5)  # type: ignore
 
     def on_start(self) -> None:
         # 랜덤한 채팅방과 유저를 선택
@@ -47,11 +52,7 @@ class WebSocketUser(SocketIOUser, HttpUser):
         self.sender = choice([self.borrower, self.lender])
         # 선택된 유저로 로그인 요청 보내고 csrf, access 토큰 가져오기
         login_req = self.client.post(
-            "http://localhost:8000/api/users/login/",
-            data={
-                "email": self.sender.email,
-                "password": "password123@"
-            }
+            "http://localhost:8000/api/users/login/", data={"email": self.sender.email, "password": "password123@"}
         )
         csrf = login_req.cookies.get("csrftoken")
         session_cookie = login_req.cookies.get("sessionid")
@@ -60,17 +61,20 @@ class WebSocketUser(SocketIOUser, HttpUser):
 
         print(f"chatroom_id: {self.chatroom_id}, borrower: {self.borrower.nickname}, lender: {self.lender.nickname}")
 
-        self.connect(
-            f"ws://localhost:8000/ws/chat/{self.chatroom_id}/",
-            header=[f"X-CSRFToken: {csrf}", f"Authorization: Bearer {access}"],
-            cookie="sessionid=" + session_cookie
-        )
-        print(
-            f"Connected to chatroom_id: {self.chatroom_id} as borrower: {self.borrower.nickname}, lender: {self.lender.nickname}"
-        )
+        if csrf and access and session_cookie:
+            self.connect(
+                f"ws://localhost:8000/ws/chat/{self.chatroom_id}/",
+                header=[f"X-CSRFToken: {csrf}", f"Authorization: Bearer {access}"],
+                cookie="sessionid=" + session_cookie,
+            )
+            print(
+                f"Connected to chatroom_id: {self.chatroom_id} as borrower: {self.borrower.nickname}, lender: {self.lender.nickname}"
+            )
+        else:
+            raise ValueError("로그인 요청 실패")
 
     @task
-    def send_message(self):
+    def send_message(self) -> None:
         if self.sender == self.borrower:
             message = {
                 "text": f"Hello! i want borrow your clothes!",
@@ -84,7 +88,7 @@ class WebSocketUser(SocketIOUser, HttpUser):
             }
             self.ws.send(json.dumps(message))
 
-    def on_message(self, message):
+    def on_message(self, message: Union[bytes, str]) -> None:
         response = json.loads(message)
         print(f"Received: {response}")
 
