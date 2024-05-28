@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
@@ -42,6 +43,10 @@ class ChatRoomView(APIView):
         """,
     )
     def post(self, request: Request) -> Response:
+        product_uuid = request.data.get("product")
+        lender_id = request.data.get("lender")
+        if Chatroom.objects.filter(product=product_uuid, lender_id=lender_id).exists():
+            return Response({"msg": "이미 개설된 채팅방 내역이 존재합니다."}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.CreateChatroomSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(borrower=request.user)
@@ -75,6 +80,7 @@ class ChatDetailView(APIView):
         if. 남은 유저가 없다면? -> 채팅방 삭제
         """
     )
+    @transaction.atomic
     def delete(self, request: Request, chatroom_id: int) -> Response:
         try:
             chatroom = Chatroom.objects.get(id=chatroom_id)
