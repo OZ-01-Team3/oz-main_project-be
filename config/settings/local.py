@@ -65,6 +65,7 @@ SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = False
+# SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 # djangorestframework-simplejwt 관련 설정
 SIMPLE_JWT = {
