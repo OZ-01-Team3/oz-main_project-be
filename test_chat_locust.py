@@ -1,12 +1,13 @@
 import json
 import os
+import requests
+import django
+
 from random import choice
 from typing import Union
 
-import django
 from django.db.models import Q
 from locust import between, task
-from locust.user.users import HttpUser
 from locust_plugins.users.socketio import SocketIOUser
 
 # Django 설정 모듈 지정
@@ -40,7 +41,7 @@ def get_account_model(user_id: int) -> Account:
 chatrooms = get_test_chatroom_info()  # type: ignore
 
 
-class WebSocketUser(SocketIOUser, HttpUser):
+class WebSocketUser(SocketIOUser):
     wait_time = between(1, 5)  # type: ignore
 
     def on_start(self) -> None:
@@ -51,8 +52,12 @@ class WebSocketUser(SocketIOUser, HttpUser):
         self.lender = get_account_model(chatroom_info["lender"])
         self.sender = choice([self.borrower, self.lender])
         # 선택된 유저로 로그인 요청 보내고 csrf, access 토큰 가져오기
-        login_req = self.client.post(
-            "http://localhost:8000/api/users/login/", data={"email": self.sender.email, "password": "password123@"}
+        login_req = requests.post(
+            "http://localhost:8000/api/users/login/",
+            data={
+                "email": self.sender.email,
+                "password": "password123@"
+            }
         )
         csrf = login_req.cookies.get("csrftoken")
         session_cookie = login_req.cookies.get("sessionid")
@@ -88,9 +93,9 @@ class WebSocketUser(SocketIOUser, HttpUser):
             }
             self.ws.send(json.dumps(message))
 
-    def on_message(self, message: Union[bytes, str]) -> None:
-        response = json.loads(message)
-        print(f"Received: {response}")
-
-    if __name__ == "__main__":
-        host = "http://127.0.0.1:8000"
+    def on_message(self, message: bytes) -> None:
+        try:
+            response = json.loads(message)
+            print(f"Received: {response}")
+        except json.JSONDecodeError:
+            print(f"Received message is not valid JSON: {json.loads(message)}")
