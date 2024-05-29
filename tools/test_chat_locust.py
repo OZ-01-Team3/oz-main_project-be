@@ -64,7 +64,7 @@ class WebSocketUser(SocketIOUser):
 
         if csrf and access and session_cookie:
             self.connect(
-                f"ws://{os.environ.get("BACKEND_HOST")}/ws/chat/{self.chatroom_id}/",
+                f"wss://{os.environ.get("BACKEND_HOST")}/ws/chat/{self.chatroom_id}/",
                 header=[f"X-CSRFToken: {csrf}", f"Authorization: Bearer {access}"],
                 cookie="sessionid=" + session_cookie,
             )
