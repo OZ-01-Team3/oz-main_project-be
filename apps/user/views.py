@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from urllib.request import urlopen
 
 import requests
@@ -150,186 +150,151 @@ class ConfirmEmailView(APIView):
         return Response({"message": "Email confirmation successful."}, status=status.HTTP_200_OK)
 
 
-class KakaoLoginView(APIView):
+class OAuthLoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    def get_provider_info(self) -> dict[str, Any]:
+        raise NotImplementedError
+
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        code = request.data.get("code")  # 프론트에서 보내준 코드
-        # 카카오 oauth 토큰 발급 url로 code가 담긴 post 요청을 보내 응답을 받는다.
-        CLIENT_ID = settings.KAKAO_CLIENT_ID
-        REDIRECT_URI = settings.REDIRECT_URI
-        token_response = requests.post(
-            "https://kauth.kakao.com/oauth/token",
+        code = request.data.get("code")
+        if not code:
+            return Response({"msg": "인가코드가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        provider_info = self.get_provider_info()
+        token_response = self.get_token(code, provider_info)
+        if token_response.status_code != status.HTTP_200_OK:
+            return Response(
+                {"msg": f"{provider_info['name']} 서버로 부터 토큰을 받아오는데 실패하였습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        access_token = token_response.json().get("access_token")
+        profile_response = self.get_profile(access_token, provider_info)
+        if profile_response.status_code != status.HTTP_200_OK:
+            return Response(
+                {"msg": f"{provider_info['name']} 서버로 부터 프로필 데이터를 받아오는데 실패하였습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return self.login_process_user(profile_response.json(), provider_info)
+
+    def get_token(self, code: str, provider_info: dict[str, Any]) -> requests.Response:
+        return requests.post(
+            provider_info["token_url"],
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             data={
                 "grant_type": "authorization_code",
                 "code": code,
-                "redirect_uri": REDIRECT_URI,
-                "client_id": CLIENT_ID,
+                "redirect_uri": provider_info["redirect_uri"],
+                "client_id": provider_info["client_id"],
+                "client_secret": provider_info.get("client_secret"),
             },
         )
 
-        if token_response.status_code != status.HTTP_200_OK:
-            return Response(
-                {"msg": "카카오 서버로 부터 토큰을 받아오는데 실패하였습니다."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        # 응답으로부터 액세스 토큰을 가져온다.
-        access_token = token_response.json().get("access_token")
-        response = requests.get(
-            "https://kapi.kakao.com/v2/user/me",
+    def get_profile(self, access_token: str, provider_info: dict[str, Any]) -> requests.Response:
+        return requests.get(
+            provider_info["profile_url"],
             headers={
                 "Authorization": f"Bearer {access_token}",
                 "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
             },
         )
 
-        if response.status_code != status.HTTP_200_OK:
-            return Response(
-                {"msg": "카카오 서버로 부터 프로필 데이터를 받아오는데 실패하였습니다."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        response_data = response.json()
-        kakao_account = response_data["kakao_account"]
-        profile = kakao_account.get("profile")
-        requests.post("https://kapi.kakao.com/v1/user/logout", headers={"Authorization": f"Bearer {access_token}"})
-        try:
-            user = Account.objects.get(email=kakao_account.get("email"))
-            access_token, refresh_token = jwt_encode(user)
-            response = Response(
-                {
-                    "access": str(access_token),
-                    "refresh": str(refresh_token),  # type: ignore
-                    "email": user.email,
-                    "nickname": user.nickname,
-                    "profile_image": user.profile_img.url,
-                },
-                status=status.HTTP_200_OK,
-            )
-            # set_jwt_cookies(response, access_token, refresh_token)
-            return response  # type: ignore
+    def login_process_user(self, profile_res_data: dict[str, Any], provider_info: dict[str, Any]) -> Response:
+        # 각 provider의 프로필 데이터 처리 로직
+        email = profile_res_data.get(provider_info["email_field"])
+        nickname = profile_res_data.get(provider_info["nickname_field"])
+        profile_img_url = profile_res_data.get(provider_info["profile_image_field"])
+        if provider_info["name"] == "네이버":
+            profile_data = profile_res_data.get("response")
+            if profile_data:
+                email = profile_data.get(provider_info["email_field"])
+                nickname = profile_data.get(provider_info["nickname_field"])
+                profile_img_url = profile_data.get(provider_info["profile_image_field"])
+        elif provider_info["name"] == "카카오":
+            account_data = profile_res_data.get("kakao_account")
+            if account_data:
+                email = account_data.get(provider_info["email_field"])
+                profile_data = account_data.get("profile")
+                if profile_data:
+                    nickname = profile_data.get(provider_info["nickname_field"])
+                    profile_img_url = profile_data.get(provider_info["profile_image_field"])
 
-        except Account.DoesNotExist:
-            # 이미지를 다운로드하여 파일 객체로 가져옴
-            image_response = urlopen(profile.get("profile_image_url"))
-            image_content = image_response.read()
-            kakao_profile_image = ContentFile(image_content, name=f"kakao-profile-{uuid4_generator(8)}.jpg")
-            user = Account.objects.create(
-                email=kakao_account.get("email"),
-                nickname=profile.get("nickname"),
-                profile_img=kakao_profile_image,
-            )
-            user.set_unusable_password()
-            access_token, refresh_token = jwt_encode(user)
-            response = Response(
-                {
-                    "access": str(access_token),
-                    "refresh": str(refresh_token),  # type: ignore
-                    "email": user.email,
-                    "nickname": user.nickname,
-                    "profile_image": user.profile_img.url,
-                },
-                status=status.HTTP_200_OK,
-            )
-            # set_jwt_cookies(response, access_token, refresh_token)
-            return response  # type: ignore
-        except Exception as e:
-            return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class GoogleLoginView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request: Request) -> Response:
-        code = request.data.get("code")
-
-        client_id = settings.GOOGLE_CLIENT_ID
-        client_secret = settings.GOOGLE_SECRET
-        redirect_uri = settings.REDIRECT_URI
-
-        if not code:
-            return Response({"msg": "인가코드가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 인가코드를 통해 토큰을 가져오는 요청
-        token_req = requests.post(
-            # f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={redirect_uri}"
-            "https://oauth2.googleapis.com/token",
-            headers={
-                "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
-            },
-            data={
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "code": code,
-                "grant_type": "authorization_code",
-                "redirect_uri": redirect_uri,
-            },
-        )
-        # 요청의 응답을 json 파싱
-        token_req_json = token_req.json()
-        if token_req_json.status_code != 200:
-            return Response({"msg": token_req_json.get("error")}, status=status.HTTP_400_BAD_REQUEST)
-        # 파싱된 데이터중 액세스 토큰을 가져옴
-        google_access_token = token_req_json.get("access_token")
-
-        # 가져온 액세스토큰을 통해 사용자 정보에 접근하는 요청
-        info_response = requests.get(
-            f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={google_access_token}"
-        )
-
-        # 상태코드로 요청이 실패했는지 확인
-        if info_response.status_code != 200:
-            return Response(
-                {"message": "구글 api로부터 액세스토큰을 받아오는데 실패했습니다."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        # 요청의 응답을 json 파싱
-        res_json = info_response.json()
-        # 파싱된 데이터중 이메일값을 가져옴
-        email = res_json.get("email")
-        # 파싱된 데이터중 닉네임을 가져옴
-        nickname = res_json.get("nickname")
         try:
             user = Account.objects.get(email=email)
-            access_token, refresh_token = jwt_encode(user)
-            response_data = {
-                "access": str(access_token),
-                "refresh": str(refresh_token),
-                "email": user.email,
-                "nickname": user.nickname,
-            }
-            if user.profile_img:
-                response_data["profile_image"] = user.profile_img.url
-            response = Response(response_data, status=status.HTTP_200_OK)
-            # if api_settings.USE_JWT:
-            #     set_jwt_cookies(response, access_token, refresh_token)
-            return response
         except Account.DoesNotExist:
-            # 파싱된 데이터에서 프로필 이미지 url을 가져와서 파일로 변환
-            image_response = urlopen(res_json.get("picture"))
-            image_content = image_response.read()
-            google_profile_image = ContentFile(image_content, name=f"google-profile-{uuid4_generator(8)}.jpg")
-            # 가져온 이메일, 닉네임, 프로필 이미지를 통해 유저 생성
-            user = Account.objects.create(email=email, nickname=nickname, profile_img=google_profile_image)
-            user.set_unusable_password()
-            access_token, refresh_token = jwt_encode(user)
-            response_data = {
-                "access": str(access_token),
-                "refresh": str(refresh_token),
-                "email": user.email,
-                "nickname": user.nickname,
-            }
-            if user.profile_img:
-                response_data["profile_image"] = user.profile_img.url
-            response = Response(response_data, status=status.HTTP_200_OK)
-            # if api_settings.USE_JWT:
-            #     set_jwt_cookies(response, access_token, refresh_token)
-            return response
+            user = self.create_user(email=email, nickname=nickname, profile_img_url=profile_img_url, provider_info=provider_info)  # type: ignore
 
-        except Exception as e:
-            # 가입이 필요한 회원
-            return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        access_token, refresh_token = jwt_encode(user)
+        response_data = {
+            "access": str(access_token),
+            "refresh": str(refresh_token),
+            "email": user.email,
+            "nickname": user.nickname,
+        }
+        if user.profile_img:
+            response_data["profile_image"] = user.profile_img.url
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    def create_user(
+        self, email: str, nickname: str, profile_img_url: Optional[str], provider_info: dict[str, Any]
+    ) -> Account:
+        if profile_img_url:
+            image_response = urlopen(profile_img_url)
+            image_content = image_response.read()
+            profile_image = ContentFile(image_content, name=f"{provider_info['name']}-profile-{uuid4_generator(8)}.jpg")
+        else:
+            profile_image = None
+        user = Account.objects.create(email=email, nickname=nickname, profile_img=profile_image)
+        user.set_unusable_password()
+        user.save()
+        return user
+
+
+class KakaoLoginView(OAuthLoginView):
+    def get_provider_info(self) -> dict[str, Any]:
+        return {
+            "name": "카카오",
+            "redirect_uri": settings.KAKAO_REDIRECT_URI,
+            "token_url": "https://kauth.kakao.com/oauth/token",
+            "profile_url": "https://kapi.kakao.com/v2/user/me",
+            "client_id": settings.KAKAO_CLIENT_ID,
+            "client_secret": settings.KAKAO_CLIENT_SECRET,
+            "email_field": "email",
+            "nickname_field": "nickname",
+            "profile_image_field": "profile_image_url",
+        }
+
+
+class GoogleLoginView(OAuthLoginView):
+    def get_provider_info(self) -> dict[str, Any]:
+        return {
+            "name": "구글",
+            "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+            "token_url": "https://oauth2.googleapis.com/token",
+            "profile_url": "https://www.googleapis.com/oauth2/v1/userinfo",
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "client_secret": settings.GOOGLE_SECRET,
+            "email_field": "email",
+            "nickname_field": "name",
+            "profile_image_field": "picture",
+        }
+
+
+class NaverLoginView(OAuthLoginView):
+    def get_provider_info(self) -> dict[str, Any]:
+        return {
+            "name": "네이버",
+            "redirect_uri": settings.NAVER_REDIRECT_URI,
+            "token_url": "https://nid.naver.com/oauth2.0/token",
+            "profile_url": "https://openapi.naver.com/v1/nid/me",
+            "client_id": settings.NAVER_CLIENT_ID,
+            "client_secret": settings.NAVER_CLIENT_SECRET,
+            "email_field": "email",
+            "nickname_field": "nickname",
+            "profile_image_field": "profile_image",
+        }
 
 
 # class CustomConfirmEmailView(APIView):
