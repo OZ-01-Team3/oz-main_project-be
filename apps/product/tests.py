@@ -18,7 +18,6 @@ from apps.category.models import Category, Style
 from apps.product.models import Product, RentalHistory
 from apps.user.models import Account
 
-
 # class ProductListAPITest(TestCase):
 #     def setUp(self):
 #         self.client = APIClient()
@@ -103,25 +102,15 @@ from apps.user.models import Account
 
 
 class RentalHistoryTestBase(APITestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.borrower = Account.objects.create_user(
-            email="test1@example.com",
-            nickname="test_borrower",
-            password="password1234@",
-            phone="010-2211-1111"
+            email="test1@example.com", nickname="test_borrower", password="password1234@", phone="010-2211-1111"
         )
         self.lender = Account.objects.create_user(
-            email="test2@example.com",
-            nickname="test_lender",
-            password="password1234@",
-            phone="010-2211-1112"
+            email="test2@example.com", nickname="test_lender", password="password1234@", phone="010-2211-1112"
         )
-        self.category = Category.objects.create(
-            name="test_category"
-        )
-        self.styles = Style.objects.create(
-            name="test_style_tag"
-        )
+        self.category = Category.objects.create(name="test_category")
+        self.styles = Style.objects.create(name="test_style_tag")
         self.product = Product.objects.create(
             name="testproduct",
             lender=self.lender,
@@ -137,7 +126,7 @@ class RentalHistoryTestBase(APITestCase):
 
 
 class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.url = reverse("borrowed_rental_history")
 
@@ -145,7 +134,7 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
         data = {
             "product": self.product.uuid,
             "rental_date": timezone.now(),
-            "return_date": timezone.now() + timedelta(days=3)
+            "return_date": timezone.now() + timedelta(days=3),
         }
         response = self.client.post(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -159,13 +148,13 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
             product=self.product,
             borrower=self.borrower,
             rental_date=timezone.now(),
-            return_date=timezone.now() + timedelta(days=3)
+            return_date=timezone.now() + timedelta(days=3),
         )
         self.assertEqual(RentalHistory.objects.count(), 1)
         data = {
             "product": history.product.uuid,
             "rental_date": history.rental_date.isoformat(),
-            "return_date": history.return_date.isoformat()
+            "return_date": history.return_date.isoformat(),  # type: ignore
         }
         response = self.client.post(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -173,10 +162,7 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
     def test_생성된_대여내역_정상적인_조회_테스트(self) -> None:
         # given
         lender2 = Account.objects.create_user(
-            email="test3@example.com",
-            nickname="test_lender2",
-            password="password1234@",
-            phone="010-2211-1113"
+            email="test3@example.com", nickname="test_lender2", password="password1234@", phone="010-2211-1113"
         )
         product2 = Product.objects.create(
             name="testproduct2",
@@ -192,13 +178,13 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
             product=self.product,
             borrower=self.borrower,
             rental_date=timezone.now(),
-            return_date=timezone.now() + timedelta(days=3)
+            return_date=timezone.now() + timedelta(days=3),
         )
         RentalHistory.objects.create(
             product=product2,
             borrower=self.borrower,
             rental_date=timezone.now(),
-            return_date=timezone.now() + timedelta(days=3)
+            return_date=timezone.now() + timedelta(days=3),
         )
 
         response = self.client.get(self.url, headers={"Authorization": f"Bearer {self.token}"})
@@ -211,14 +197,11 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
 
 
 class RentalHistoryLenderViewTests(RentalHistoryTestBase):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.url = reverse("lending_rental_history")
         self.lender2 = Account.objects.create_user(
-            email="test3@example.com",
-            nickname="test_lender2",
-            password="password1234@",
-            phone="010-2211-1113"
+            email="test3@example.com", nickname="test_lender2", password="password1234@", phone="010-2211-1113"
         )
         self.product2 = Product.objects.create(
             name="testproduct2",
@@ -234,15 +217,14 @@ class RentalHistoryLenderViewTests(RentalHistoryTestBase):
             product=self.product,
             borrower=self.borrower,
             rental_date=timezone.now(),
-            return_date=timezone.now() + timedelta(days=3)
+            return_date=timezone.now() + timedelta(days=3),
         )
         self.history2 = RentalHistory.objects.create(
             product=self.product2,
             borrower=self.borrower,
             rental_date=timezone.now(),
-            return_date=timezone.now() + timedelta(days=3)
+            return_date=timezone.now() + timedelta(days=3),
         )
-
 
     def test_lender의_판매내역_조회_테스트(self) -> None:
         self.token = AccessToken.for_user(self.lender)
@@ -264,32 +246,27 @@ class RentalHistoryLenderViewTests(RentalHistoryTestBase):
 
 
 class RentalHistoryUpdateViewTests(RentalHistoryTestBase):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.history = RentalHistory.objects.create(
             product=self.product,
             borrower=self.borrower,
             rental_date=timezone.now(),
-            return_date=timezone.now() + timedelta(days=3)
+            return_date=timezone.now() + timedelta(days=3),
         )
         self.url = reverse("rental_history_update", kwargs={"pk": self.history.pk})
 
-
     def test_대여요청에서_상태_업데이트_테스트(self) -> None:
-        data = {
-            "status": "ACCEPT"
-        }
+        data = {"status": "ACCEPT"}
         response = self.client.patch(self.url, data=data, headers={"Authorization": f"Bearer {self.token}"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get("status"), data["status"])
 
     def test_대여날짜_변경_테스트(self) -> None:
-        data = {
-            "return_date": timezone.now() + timedelta(days=4)
-        }
+        data = {"return_date": timezone.now() + timedelta(days=4)}
 
         response = self.client.patch(self.url, data=data, headers={"Authorization": f"Bearer {self.token}"})
         print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get("return_date").split('T')[0], data["return_date"].date().isoformat())
+        self.assertEqual(response.data.get("return_date").split("T")[0], data["return_date"].date().isoformat())

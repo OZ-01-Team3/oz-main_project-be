@@ -1,13 +1,14 @@
+from typing import Any
 
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import ListAPIView, ListCreateAPIView, UpdateAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
-from rest_framework.generics import ListAPIView, ListCreateAPIView, UpdateAPIView
 
 from apps.product.models import Product, ProductImage, RentalHistory
 from apps.product.permissions import IsLenderOrReadOnly
@@ -41,15 +42,15 @@ class RentalHistoryBorrowerView(ListCreateAPIView[RentalHistory]):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self) -> QuerySet[RentalHistory]:
-        return RentalHistory.objects.filter(borrower=self.request.user)
+        return RentalHistory.objects.filter(borrower=self.request.user)  # type: ignore
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         data = request.data.copy()
         data["borrower_id"] = self.request.user.id
         serializer = self.get_serializer(data=data)
@@ -64,10 +65,10 @@ class RentalHistoryLenderView(ListAPIView[RentalHistory]):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self) -> QuerySet[RentalHistory]:
-        queryset = RentalHistory.objects.filter(product__lender=self.request.user)
+        queryset = RentalHistory.objects.filter(product__lender=self.request.user)  # type: ignore
         return queryset
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
 
         serializer = self.get_serializer(queryset, many=True)
@@ -79,5 +80,5 @@ class RentalHistoryUpdateView(UpdateAPIView[RentalHistory]):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self) -> QuerySet[RentalHistory]:
-        queryset = RentalHistory.objects.filter(borrower=self.request.user)
+        queryset = RentalHistory.objects.filter(borrower=self.request.user)  # type: ignore
         return queryset

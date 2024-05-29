@@ -128,24 +128,14 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
         return instance
 
 
-class ProductInfoSerializer(serializers.ModelSerializer):
-    style = serializers.SerializerMethodField()
+class ProductInfoSerializer(serializers.ModelSerializer[Product]):
+    style = serializers.SerializerMethodField()  # type: ignore
     category = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = [
-            "uuid",
-            "name",
-            "brand",
-            "size",
-            "purchase_price",
-            "rental_fee",
-            "category",
-            "style",
-            "images"
-        ]
+        fields = ["uuid", "name", "brand", "size", "purchase_price", "rental_fee", "category", "style", "images"]
 
     def get_style(self, obj: Product) -> list[str]:
         return [style.name for style in obj.styles.all()]
@@ -165,9 +155,11 @@ class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
         exclude = ("borrower",)
         read_only_fields = ("created_at", "updated_at", "rental_date")
 
-    def validate(self, data: dict) -> dict[str, Any]:
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
         if RentalHistory.objects.filter(**data).exists():
-            raise serializers.ValidationError(detail={"error": "이미 대여 신청중인 내역이 있습니다."}, code="Already Exist")
+            raise serializers.ValidationError(
+                detail={"error": "이미 대여 신청중인 내역이 있습니다."}, code="Already Exist"
+            )
         return data
 
     def get_lender_nickname(self, obj: RentalHistory) -> str:
