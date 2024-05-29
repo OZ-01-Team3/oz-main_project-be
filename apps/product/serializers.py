@@ -135,7 +135,18 @@ class ProductInfoSerializer(serializers.ModelSerializer[Product]):
 
     class Meta:
         model = Product
-        fields = ["uuid", "name", "brand", "size", "purchase_price", "rental_fee", "category", "style", "images"]
+        fields = [
+            "uuid",
+            "name",
+            "brand",
+            "size",
+            "purchase_price",
+            "rental_fee",
+            "category",
+            "style",
+            "images",
+            "description",
+        ]
 
     def get_style(self, obj: Product) -> list[str]:
         return [style.name for style in obj.styles.all()]
@@ -155,15 +166,20 @@ class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
         exclude = ("borrower",)
         read_only_fields = ("created_at", "updated_at", "rental_date")
 
-    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
-        if RentalHistory.objects.filter(**data).exists():
-            raise serializers.ValidationError(
-                detail={"error": "이미 대여 신청중인 내역이 있습니다."}, code="Already Exist"
-            )
-        return data
-
     def get_lender_nickname(self, obj: RentalHistory) -> str:
         return obj.product.lender.nickname
 
     def get_borrower_nickname(self, obj: RentalHistory) -> str:
         return obj.borrower.nickname
+
+    def to_representation(self, instance: RentalHistory) -> dict[str, Any]:
+        data = super().to_representation(instance)
+        if instance.status == "REQUEST":
+            data["status"] = "대여 요청"
+        elif instance.status == "ACCEPT":
+            data["status"] = "대여 요청 수락"
+        elif instance.status == "RETURNED":
+            data["status"] = "반납 완료"
+        elif instance.status == "BORROWING":
+            data["status"] = "대여 진행중"
+        return data

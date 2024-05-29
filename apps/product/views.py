@@ -1,3 +1,4 @@
+import pdb
 from typing import Any
 
 from django.db.models import QuerySet
@@ -21,7 +22,6 @@ from apps.product.serializers import (
 
 # @method_decorator(cache_page(60 * 60 * 2), name="dispatch")
 class ProductViewSet(viewsets.ModelViewSet[Product]):
-    # queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsLenderOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -46,13 +46,14 @@ class RentalHistoryBorrowerView(ListCreateAPIView[RentalHistory]):
 
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
-
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        data = request.data.copy()
+        data = request.data.dict()  # type: ignore
         data["borrower_id"] = self.request.user.id
+        if RentalHistory.objects.filter(**data).exists():
+            return Response({"msg": "이미 대여 신청중인 내역이 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -70,7 +71,6 @@ class RentalHistoryLenderView(ListAPIView[RentalHistory]):
 
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         queryset = self.filter_queryset(self.get_queryset())
-
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -80,5 +80,6 @@ class RentalHistoryUpdateView(UpdateAPIView[RentalHistory]):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self) -> QuerySet[RentalHistory]:
-        queryset = RentalHistory.objects.filter(borrower=self.request.user)  # type: ignore
+        print(self.request.data)
+        queryset = RentalHistory.objects.all()
         return queryset

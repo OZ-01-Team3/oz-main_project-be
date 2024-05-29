@@ -141,7 +141,7 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
         self.assertEqual(RentalHistory.objects.count(), 1)
         self.assertEqual(response.data.get("product_info")["uuid"], str(self.product.uuid))
         self.assertEqual(response.data.get("borrower_nickname"), self.borrower.nickname)
-        self.assertEqual(response.data.get("status"), "REQUEST")
+        self.assertEqual(response.data.get("status"), "대여 요청")
 
     def test_이미_대여중인_상품을_대여하려고_시도하는경우_테스트(self) -> None:
         history = RentalHistory.objects.create(
@@ -261,7 +261,7 @@ class RentalHistoryUpdateViewTests(RentalHistoryTestBase):
         response = self.client.patch(self.url, data=data, headers={"Authorization": f"Bearer {self.token}"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get("status"), data["status"])
+        self.assertEqual(response.data.get("status"), "대여 요청 수락")
 
     def test_대여날짜_변경_테스트(self) -> None:
         data = {"return_date": timezone.now() + timedelta(days=4)}
