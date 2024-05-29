@@ -159,12 +159,12 @@ def get_chatroom_message(chatroom_id: int) -> Any:
         # 레디스에 저장된 메시지가 30개가 넘으면 가장 마지막에 저장된 메시지부터 30개를 가져옴
         if stored_message_num >= 30:
             stored_messages = redis_conn.lrange(key, 0, 29)
-            messages = [json.loads(msg) for msg in stored_messages[::-1]]
+            messages = [json.loads(msg) for msg in stored_messages]
             return messages
 
         # 30개가 넘지않으면 레디스에 저장된 메시지들을 가져오고
-        stored_messages = redis_conn.lrange(key, 0, stored_message_num)
-        messages = [json.loads(msg) for msg in stored_messages[::-1]]
+        stored_messages = redis_conn.lrange(key, 0, stored_message_num - 1)
+        messages = [json.loads(msg) for msg in stored_messages]
 
         # 데이터베이스에서 30 - stored_message_num을 뺀 개수만큼 가져옴
         db_messages = Message.objects.filter(chatroom_id=chatroom_id).order_by("-created_at")
@@ -176,21 +176,21 @@ def get_chatroom_message(chatroom_id: int) -> Any:
         # 디비에 저장된 메시지가 30-stored_message_num 보다 많으면 슬라이싱해서 필요한 만큼의 데이터를 가져옴
         if len(db_messages) >= 30 - stored_message_num:
             serialized_messages = MessageSerializer(db_messages[: 30 - stored_message_num], many=True).data
-            return serialized_messages[::-1] + messages
+            return messages + serialized_messages
 
         # 디비에 저장된 메시지가 30-stored_message_num 보다 적으면 db에 저장된 채팅방의 모든 메시지를 가져옴
         serialized_messages = MessageSerializer(db_messages, many=True).data
-        return serialized_messages[::-1] + messages
+        return messages + serialized_messages
 
     # 레디스에 해당 채팅방 그룹 네임으로 지정된 키값이 없으면 데이터베이스에서 채팅 메시지를 가져옴
     db_messages = Message.objects.filter(chatroom_id=chatroom_id)
     if db_messages:
         if db_messages.count() >= 30:
             serialized_messages = MessageSerializer(db_messages[:30], many=True).data
-            return serialized_messages[::-1]
+            return serialized_messages
 
         serialized_messages = MessageSerializer(db_messages, many=True).data
-        return serialized_messages[::-1]
+        return serialized_messages
 
     # 어디에도 데이터가 존재하지않으면 None을 반환
     return None
