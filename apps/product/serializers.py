@@ -12,12 +12,6 @@ from apps.user.serializers import UserInfoSerializer
 logger = logging.getLogger(__name__)
 
 
-class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
-    class Meta:
-        model = RentalHistory
-        fields = "__all__"
-
-
 class ProductImageSerializer(serializers.ModelSerializer[ProductImage]):
     image = serializers.ImageField(use_url=True)
 
@@ -132,3 +126,60 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
         styles = self.set_styles(styles_data)
         instance.styles.set(styles)
         return instance
+
+
+class ProductInfoSerializer(serializers.ModelSerializer[Product]):
+    style = serializers.SerializerMethodField()  # type: ignore
+    category = serializers.SerializerMethodField()
+    images = ProductImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            "uuid",
+            "name",
+            "brand",
+            "size",
+            "purchase_price",
+            "rental_fee",
+            "category",
+            "style",
+            "images",
+            "description",
+        ]
+
+    def get_style(self, obj: Product) -> list[str]:
+        return [style.name for style in obj.styles.all()]
+
+    def get_category(self, obj: Product) -> str:
+        return obj.product_category.name
+
+
+class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
+    product_info = ProductInfoSerializer(read_only=True, source="product")
+    lender_nickname = serializers.SerializerMethodField()
+    borrower_nickname = serializers.SerializerMethodField()
+    borrower_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = RentalHistory
+        exclude = ("borrower",)
+        read_only_fields = ("created_at", "updated_at", "rental_date")
+
+    def get_lender_nickname(self, obj: RentalHistory) -> str:
+        return obj.product.lender.nickname
+
+    def get_borrower_nickname(self, obj: RentalHistory) -> str:
+        return obj.borrower.nickname
+
+    def to_representation(self, instance: RentalHistory) -> dict[str, Any]:
+        data = super().to_representation(instance)
+        if instance.status == "REQUEST":
+            data["status"] = "대여 요청"
+        elif instance.status == "ACCEPT":
+            data["status"] = "대여 요청 수락"
+        elif instance.status == "RETURNED":
+            data["status"] = "반납 완료"
+        elif instance.status == "BORROWING":
+            data["status"] = "대여 진행중"
+        return data

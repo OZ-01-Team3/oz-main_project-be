@@ -42,7 +42,9 @@ class ProductAdmin(admin.ModelAdmin[Product]):
 @admin.register(RentalHistory)
 class RentalHistoryAdmin(admin.ModelAdmin[RentalHistory]):
     list_display = [
+        "id",
         "product",
+        "status",
         # "product_lender",
         "rental_date",
         "return_date",

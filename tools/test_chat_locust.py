@@ -53,7 +53,7 @@ class WebSocketUser(SocketIOUser):
         # 선택된 유저로 로그인 요청 보내고 csrf, access 토큰 가져오기
         login_req = requests.post(
             f"https://{os.environ.get("BACKEND_HOST")}/api/users/login/",
-            data={"email": self.sender.email, "password": "password123@"}
+            data={"email": self.sender.email, "password": "password123@"},
         )
         csrf = login_req.cookies.get("csrftoken")
         session_cookie = login_req.cookies.get("sessionid")
