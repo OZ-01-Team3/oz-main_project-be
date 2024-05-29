@@ -3,7 +3,6 @@ MNG = manage.py
 MKDIR = mkdir
 LN = ln -sf
 EXP = export
-
 DJSET = DJANGO_SETTINGS_MODULE
 
 PTR = poetry
@@ -24,6 +23,9 @@ SCRIPT = ./test.sh
 SETTING = --settings=$(CONF).$(SETDIR).$(SET)
 LOCSET = --settings=$(CONF).$(SETDIR).$(LOC)
 PRODSET = --settings=$(CONF).$(SETDIR).$(PROD)
+
+LCST = locust
+CTCD = create_chat_locust_data
 
 .PHONY: all
 all:
@@ -127,3 +129,11 @@ stop: ## docker db stop
 .PHONY: exec
 exec: ## enter the container
 	$(DCK) exec -it $(DBCONT) /bin/sh
+
+.PHONY: locust
+locust: ## start locust runserver
+	$(LCST) -f $(a)
+
+.PHONY: setlocust
+setlocust: ## make user, chatroom for locust test
+	$(PY) $(MNG) $(CTCD)
