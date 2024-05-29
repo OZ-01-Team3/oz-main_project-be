@@ -1,7 +1,6 @@
 import json
 import os
 from random import choice
-from typing import Union
 
 import django
 import requests
@@ -53,7 +52,8 @@ class WebSocketUser(SocketIOUser):
         self.sender = choice([self.borrower, self.lender])
         # 선택된 유저로 로그인 요청 보내고 csrf, access 토큰 가져오기
         login_req = requests.post(
-            "http://localhost:8000/api/users/login/", data={"email": self.sender.email, "password": "password123@"}
+            f"https://{os.environ.get("BACKEND_HOST")}/api/users/login/",
+            data={"email": self.sender.email, "password": "password123@"}
         )
         csrf = login_req.cookies.get("csrftoken")
         session_cookie = login_req.cookies.get("sessionid")
@@ -64,7 +64,7 @@ class WebSocketUser(SocketIOUser):
 
         if csrf and access and session_cookie:
             self.connect(
-                f"ws://localhost:8000/ws/chat/{self.chatroom_id}/",
+                f"ws://{os.environ.get("BACKEND_HOST")}/ws/chat/{self.chatroom_id}/",
                 header=[f"X-CSRFToken: {csrf}", f"Authorization: Bearer {access}"],
                 cookie="sessionid=" + session_cookie,
             )
