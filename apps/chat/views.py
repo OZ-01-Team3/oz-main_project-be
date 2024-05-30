@@ -2,7 +2,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers as serializer
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,6 +16,7 @@ from apps.chat.utils import (
     check_entered_chatroom,
     delete_chatroom,
 )
+from apps.user.api_schema import UserInfoSerializer
 
 
 def render_chat(request: HttpRequest) -> HttpResponse:
@@ -23,8 +25,18 @@ def render_chat(request: HttpRequest) -> HttpResponse:
 
 class ChatRoomView(APIView):
     @extend_schema(
-        request=serializers.ChatroomListSerializer,
-        responses=serializers.ChatroomListSerializer,
+        responses=inline_serializer(
+            name="ChatRoomSerializer",
+            fields={
+                "id": serializer.IntegerField(),
+                "product": serializer.UUIDField(),
+                "product_image": serializer.URLField(),
+                "last_message": serializer.CharField(),
+                "unread_chat_count": serializer.IntegerField(),
+                "user_info": UserInfoSerializer(),
+            },
+            many=True,
+        ),
         description="유저가 참여한 채팅방 리스트를 내려주는 get메서드",
     )
     def get(self, request: Request) -> Response:
@@ -58,10 +70,19 @@ class ChatRoomView(APIView):
 
 class ChatDetailView(APIView):
     @extend_schema(
-        responses=serializers.EnterChatroomSerializer,
+        responses=inline_serializer(
+            name="inline_serializer",
+            fields={
+                "product_image": serializer.CharField(),
+                "product_name": serializer.CharField(),
+                "product_rental_fee": serializer.CharField(),
+                "product_condition": serializer.CharField(),
+                "messages": serializers.MessageSerializer(many=True),
+            },
+        ),
         description="""
-        채팅방에 입장시 채팅방의 메시지를 내려주고, 상품에 대한 정보를 내려줌
-        """,
+            채팅방에 입장시 채팅방의 메시지를 내려주고, 상품에 대한 정보를 내려줌
+            """,
     )
     def get(self, request: Request, chatroom_id: int) -> Response:
         try:

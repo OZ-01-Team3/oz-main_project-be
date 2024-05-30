@@ -11,8 +11,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
-from rest_framework import permissions, status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import permissions, serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -156,6 +156,19 @@ class OAuthLoginView(APIView):
     def get_provider_info(self) -> dict[str, Any]:
         raise NotImplementedError
 
+    @extend_schema(
+        request=inline_serializer(name="CodeSeralizer", fields={"code": serializers.CharField()}),
+        responses=inline_serializer(
+            name="SocialLoginSeralizer",
+            fields={
+                "access": serializers.CharField(),
+                "refresh": serializers.CharField(),
+                "email": serializers.CharField(),
+                "nickname": serializers.CharField(),
+                "profile_image": serializers.ImageField(),
+            },
+        ),
+    )
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         code = request.data.get("code")
         if not code:
