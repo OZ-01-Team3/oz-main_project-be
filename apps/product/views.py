@@ -93,6 +93,5 @@ class RentalHistoryUpdateView(UpdateAPIView[RentalHistory]):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self) -> QuerySet[RentalHistory]:
-        print(self.request.data)
         queryset = RentalHistory.objects.all()
         return queryset
