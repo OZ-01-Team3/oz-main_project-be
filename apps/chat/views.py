@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
@@ -55,10 +56,16 @@ class ChatRoomView(APIView):
         """,
     )
     def post(self, request: Request) -> Response:
+        if isinstance(request.user, AnonymousUser):
+            return Response({"msg": "유저 자격증명이 불일치 합니다. 재로그인이 필요합니다."})
         product_uuid = request.data.get("product")
         lender_id = request.data.get("lender")
         if Chatroom.objects.filter(
-            product=product_uuid, lender_id=lender_id, lender_status=True, borrower_status=True
+            product=product_uuid,
+            borrower_id=request.user.id,
+            lender_id=lender_id,
+            lender_status=True,
+            borrower_status=True
         ).exists():
             return Response({"msg": "이미 개설된 채팅방 내역이 존재합니다."}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.CreateChatroomSerializer(data=request.data)
