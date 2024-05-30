@@ -1,10 +1,8 @@
-import pdb
 from typing import Any
 
-from django.core.cache import cache
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, ListCreateAPIView, UpdateAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -19,9 +17,9 @@ from apps.product.serializers import (
     ProductSerializer,
     RentalHistorySerializer,
 )
-from apps.product.utils import clear_cache
+from apps.product.utils import clear_cache, get_cache, set_cache, get_or_set_cache
 
-CACHE_TIME = 60 * 60 * 2
+CACHE_TIME = 60 * 60 * 24
 PRODUCT_KEY = "products_list"
 
 
@@ -35,8 +33,13 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self) -> QuerySet[Product]:
-        queryset = cache.get_or_set(PRODUCT_KEY, Product.objects.all().order_by("-created_at"), CACHE_TIME)
-        return queryset
+        queryset = Product.objects.all().order_by("-created_at")
+        cached_queryset = get_or_set_cache(PRODUCT_KEY, queryset, CACHE_TIME)
+        # queryset = get_cache(PRODUCT_KEY)
+        # if not queryset:
+        #     queryset = Product.objects.all().order_by("-created_at")
+        #     set_cache(PRODUCT_KEY, queryset, CACHE_TIME)
+        return cached_queryset
 
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
         serializer.save(lender=self.request.user)
