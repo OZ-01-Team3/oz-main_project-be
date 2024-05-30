@@ -19,7 +19,8 @@ from apps.user.views import (
     DeleteUserView,
     GoogleLoginView,
     KakaoLoginView,
-    SendCodeView, NaverLoginView,
+    NaverLoginView,
+    SendCodeView,
 )
 
 # from apps.user.views import CustomConfirmEmailView

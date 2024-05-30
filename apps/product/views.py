@@ -10,14 +10,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
-from apps.product.models import Product, ProductImage, RentalHistory
+from apps.product.models import Product, RentalHistory
 from apps.product.permissions import IsLenderOrReadOnly
-from apps.product.serializers import (
-    ProductImageSerializer,
-    ProductSerializer,
-    RentalHistorySerializer,
-)
-from apps.product.utils import clear_cache, get_cache, set_cache, get_or_set_cache
+from apps.product.serializers import ProductSerializer, RentalHistorySerializer
+from apps.product.utils import clear_cache, get_or_set_cache
 
 CACHE_TIME = 60 * 60 * 24
 PRODUCT_KEY = "products_list"
@@ -32,7 +28,7 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     ordering_fields = ["created_at", "rental_fee", "views", "likes"]
     parser_classes = [MultiPartParser, FormParser]
 
-    def get_queryset(self) -> QuerySet[Product]:
+    def get_queryset(self) -> Any:
         queryset = Product.objects.all().order_by("-created_at")
         cached_queryset = get_or_set_cache(PRODUCT_KEY, queryset, CACHE_TIME)
         # queryset = get_cache(PRODUCT_KEY)
@@ -45,11 +41,11 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
         serializer.save(lender=self.request.user)
         clear_cache(PRODUCT_KEY)
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer: BaseSerializer[Product]) -> None:
         serializer.save()
         clear_cache(PRODUCT_KEY)
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance: Product) -> None:
         instance.delete()
         clear_cache(PRODUCT_KEY)
 
