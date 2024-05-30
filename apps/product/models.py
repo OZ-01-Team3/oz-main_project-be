@@ -60,8 +60,8 @@ class RentalHistory(BaseModel):
     ]
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     borrower = models.ForeignKey(Account, on_delete=models.CASCADE)
-    rental_date = models.DateTimeField(auto_now_add=True)
-    return_date = models.DateTimeField(null=True, blank=True)  # 대여 반납일
+    rental_date = models.DateTimeField()
+    return_date = models.DateTimeField()  # 대여 반납일
     status = models.CharField(choices=STATUS_CHOICE, default="REQUEST", max_length=10)
 
     def __str__(self) -> str:

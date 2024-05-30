@@ -164,7 +164,7 @@ class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
     class Meta:
         model = RentalHistory
         exclude = ("borrower",)
-        read_only_fields = ("created_at", "updated_at", "rental_date")
+        read_only_fields = ("created_at", "updated_at")
 
     def get_lender_nickname(self, obj: RentalHistory) -> str:
         return obj.product.lender.nickname

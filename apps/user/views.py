@@ -263,7 +263,7 @@ class OAuthLoginView(APIView):
             domain=settings.CSRF_COOKIE_DOMAIN,
             samesite=None,
             secure=settings.CSRF_COOKIE_SECURE,
-            httponly=settings.CSRF_COOKIE_HTTPONLY
+            httponly=settings.CSRF_COOKIE_HTTPONLY,
         )
         return response
 
