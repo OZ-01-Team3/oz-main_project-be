@@ -205,8 +205,8 @@ REST_AUTH = {
     "LOGOUT_ON_PASSWORD_CHANGE": False,
     "SESSION_LOGIN": False,
     "USE_JWT": True,  # default: False
-    "JWT_AUTH_COOKIE": "adfdfd",  # default: None
-    "JWT_AUTH_REFRESH_COOKIE": "rfdfdf",  # default: None
+    "JWT_AUTH_COOKIE": None,  # default: None
+    "JWT_AUTH_REFRESH_COOKIE": None,  # default: None
     "JWT_AUTH_REFRESH_COOKIE_PATH": "/",
     "JWT_AUTH_SECURE": True,
     "JWT_AUTH_HTTPONLY": False,  # default: False
