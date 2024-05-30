@@ -8,8 +8,10 @@ from dj_rest_auth.registration.views import RegisterView
 from dj_rest_auth.utils import jwt_encode
 from dj_rest_auth.views import LoginView
 from django.conf import settings
+from django.contrib.auth import login
 from django.core.cache import cache
 from django.core.files.base import ContentFile
+from django.middleware.csrf import get_token
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import permissions, serializers, status
@@ -214,7 +216,7 @@ class OAuthLoginView(APIView):
             },
         )
 
-    def login_process_user(self, profile_res_data: dict[str, Any], provider_info: dict[str, Any]) -> Response:
+    def login_process_user(self, request: Request, profile_res_data: dict[str, Any], provider_info: dict[str, Any]) -> Response:
         # 각 provider의 프로필 데이터 처리 로직
         email = profile_res_data.get(provider_info["email_field"])
         nickname = profile_res_data.get(provider_info["nickname_field"])
@@ -239,6 +241,9 @@ class OAuthLoginView(APIView):
         except Account.DoesNotExist:
             user = self.create_user(email=email, nickname=nickname, profile_img_url=profile_img_url, provider_info=provider_info)  # type: ignore
 
+        # 로그인해서 세션획득
+        login(request, user)
+
         access_token, refresh_token = jwt_encode(user)
         response_data = {
             "access": str(access_token),
@@ -248,7 +253,10 @@ class OAuthLoginView(APIView):
         }
         if user.profile_img:
             response_data["profile_image"] = user.profile_img.url
-        return Response(response_data, status=status.HTTP_200_OK)
+        # set_cookie csrftoken
+        response = Response(response_data, status=status.HTTP_200_OK)
+        response.set_cookie("csrftoken", get_token(request))
+        return response
 
     def create_user(
         self, email: str, nickname: str, profile_img_url: Optional[str], provider_info: dict[str, Any]
