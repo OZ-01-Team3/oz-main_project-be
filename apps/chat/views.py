@@ -17,6 +17,7 @@ from apps.chat.utils import (
     check_entered_chatroom,
     delete_chatroom,
 )
+from apps.product.serializers import RentalHistorySerializer, RentalHistoryStatusSerializer
 from apps.user.api_schema import UserInfoSerializer
 
 
@@ -85,6 +86,7 @@ class ChatDetailView(APIView):
                 "product_rental_fee": serializer.CharField(),
                 "product_condition": serializer.CharField(),
                 "messages": serializers.MessageSerializer(many=True),
+                "rental_history": RentalHistoryStatusSerializer()
             },
         ),
         description="""

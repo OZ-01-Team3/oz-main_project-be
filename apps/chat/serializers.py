@@ -11,7 +11,8 @@ from apps.chat.utils import (
     read_messages_at_postgres,
     read_messages_at_redis,
 )
-from apps.product.models import ProductImage
+from apps.product.models import ProductImage, RentalHistory
+from apps.product.serializers import RentalHistoryStatusSerializer
 
 
 class ChatroomListSerializer(serializers.ModelSerializer[Chatroom]):
@@ -79,10 +80,13 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
     product_name = serializers.CharField(source="product.name", read_only=True)
     product_rental_fee = serializers.IntegerField(source="product.rental_fee", read_only=True)
     product_condition = serializers.CharField(source="product.condition", read_only=True)
+    rental_history = serializers.SerializerMethodField()
 
     class Meta:
         model = Chatroom
-        fields = ["product", "product_image", "product_name", "product_rental_fee", "product_condition"]
+        fields = [
+            "product", "product_image", "product_name", "product_rental_fee", "product_condition", "rental_history"
+        ]
 
     def to_representation(self, instance: Chatroom) -> Dict[str, Any]:
         data = super().to_representation(instance)
@@ -97,9 +101,20 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
             data["messages"] = messages
         return data
 
-    def get_product_image(self, obj: ProductImage) -> Any:
+    def get_product_image(self, obj: Chatroom) -> Any:
         if obj.product:
             product_images = obj.product.images.first()
             if product_images:
                 return product_images.image.url  # 이미지의 URL을 리턴
         return None  # 이미지가 없을 경우 None을 리턴
+
+    def get_rental_history(self, obj: Chatroom) -> Optional[dict[str, Any]]:
+        if obj.product:
+            chat_product = obj.product
+            try:
+                rental_history = chat_product.rentalhistory_set.get(borrower=obj.borrower, product=obj.product)
+                return RentalHistoryStatusSerializer(rental_history).data
+
+            except RentalHistory.DoesNotExist:
+                return None
+        return None
