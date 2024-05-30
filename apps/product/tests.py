@@ -1,104 +1,25 @@
-# from django.test import TestCase
-# from django.urls import reverse
-# from mypyc.irbuild.builder import IRBuilder
-# from mypyc.irbuild.builder.IRBuilder import self
-# from rest_framework import status
-# from rest_framework.test import APIClient
-#
-# from apps.product.models import Product
 from datetime import timedelta
 
+from django.contrib.auth.models import AnonymousUser
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import (
+    APIClient,
+    APIRequestFactory,
+    APITestCase,
+    force_authenticate,
+)
 from rest_framework_simplejwt.tokens import AccessToken
 
 from apps.category.models import Category, Style
-from apps.product.models import Product, RentalHistory
+from apps.product.models import Product, ProductImage, RentalHistory
+from apps.product.permissions import IsLenderOrReadOnly
+from apps.product.serializers import ProductImageSerializer, ProductSerializer
+from apps.product.views import ProductViewSet
 from apps.user.models import Account
-
-# class ProductListAPITest(TestCase):
-#     def setUp(self):
-#         self.client = APIClient()
-#         self.product1 = Product.objects.create(
-#             name='Product 1',
-#             user_id=1,
-#             brand='Brand 1',
-#             condition='Good',
-#             purchasing_price=100000,
-#             rental_fee=5000,
-#             size='L',
-#             views=100,
-#             product_category_id=1,
-#             style_category_id=1,
-#             status=True
-#         )
-#         self.product2 = Product.objects.create(
-#             name='Product 2',
-#             user_id=2,
-#             brand='Brand 2',
-#             condition='Bad',
-#             purchasing_price=80000,
-#             rental_fee=4000,
-#             size='S',
-#             views=0,
-#             product_category_id=2,
-#             style_category_id=2,
-#             status=False
-#         )
-#
-#         # API 호출
-#
-#     response = self.client.get('/api/products/')
-#
-#     # 응답 확인
-#     self.assertEqual(response.status_code, status.HTTP_200_OK)
-#
-#     # 응답 데이터의 길이가 2인지 확인 (2개의 상품이 반환되어야 함)
-#     self.assertEqual(len(response.data), 2)
-#
-#     # 상품의 모든 필드들을 확인
-#     self.assertEqual(response.data[0]['name'], 'Product 1')
-#     self.assertEqual(response.data[0]['user'], 1)
-#     self.assertEqual(response.data[0]['brand'], 'Brand 1')
-#     self.assertEqual(response.data[0]['condition'], 'New')
-#     self.assertEqual(response.data[0]['purchasing_price'], 10000)
-#     self.assertEqual(response.data[0]['rental_fee'], 5000)
-#     self.assertEqual(response.data[0]['size'], 'M')
-#     self.assertEqual(response.data[0]['views'], 0)
-#     self.assertEqual(response.data[0]['product_category_id'], 1)
-#     self.assertEqual(response.data[0]['style_category_id'], 1)
-#     self.assertEqual(response.data[0]['status'], True)
-#
-#     self.assertEqual(response.data[1]['name'], 'Product 2')
-#     self.assertEqual(response.data[1]['user'], 2)
-#     self.assertEqual(response.data[1]['brand'], 'Brand 2')
-#     self.assertEqual(response.data[1]['condition'], 'Used')
-#     self.assertEqual(response.data[1]['purchasing_price'], 8000)
-#     self.assertEqual(response.data[1]['rental_fee'], 4000)
-#     self.assertEqual(response.data[1]['size'], 'L')
-#     self.assertEqual(response.data[1]['views'], 0)
-#     self.assertEqual(response.data[1]['product_category_id'], 2)
-#     self.assertEqual(response.data[1]['style_category_id'], 2)
-#     self.assertEqual(response.data[1]['status'], True)
-# def test_product_list_api_view(self):
-#     url = reverse("product_list")
-#     response = self.client.get(url)
-#     self.assertEqual(response.status_code, status.HTTP_200_OK)
-#     self.assertEqual(len(response.data), Product.objects.count())
-#
-# def test_product_create_api_view(self):
-#     url = reverse("product_create")
-#     response = self.client.post(url, self.product_data, format="json")
-#     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-#
-# def test_product_detail_api_view(self):
-#     url = reverse("product_detail", args=[self.product.pk])
-#     response = self.client.get(url)
-#     self.assertEqual(response.status_code, status.HTTP_200_OK)
-#     #내가 셋업에 만든 상품이랑 이 뷰에서 조회 하고자 하는 상품의 데이터가 일치 하는 지를 확인해야함
-#
 
 
 class RentalHistoryTestBase(APITestCase):
@@ -270,3 +191,215 @@ class RentalHistoryUpdateViewTests(RentalHistoryTestBase):
         print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get("return_date").split("T")[0], data["return_date"].date().isoformat())
+
+
+class ProductModelTest(TestCase):
+    def setUp(self) -> None:
+        self.user = Account.objects.create_user(email="test@example.com", password="password")
+        self.category = Category.objects.create(name="category1")
+        self.style = Style.objects.create(name="style1")
+        self.data = {
+            "name": "product1",
+            "lender": self.user,
+            "brand": "brand",
+            "condition": "condition",
+            "purchase_date": "2024-05-01",
+            "purchase_price": 100000,
+            "rental_fee": 10000,
+            "size": "m",
+            "product_category": self.category,
+            "amount": 1,
+            "region": "Seoul",
+        }
+        self.product = Product.objects.create(**self.data)
+        self.product.styles.add(self.style)
+
+    def test_create_product(self) -> None:
+        self.assertEqual(self.product.name, self.data["name"])
+        self.assertEqual(self.product.lender, self.data["lender"])
+        self.assertEqual(self.product.brand, self.data["brand"])
+        self.assertEqual(self.product.condition, self.data["condition"])
+        self.assertEqual(self.product.purchase_date, self.data["purchase_date"])
+        self.assertEqual(self.product.purchase_price, self.data["purchase_price"])
+        self.assertEqual(self.product.rental_fee, self.data["rental_fee"])
+        self.assertEqual(self.product.size, self.data["size"])
+        self.assertEqual(self.product.product_category, self.data["product_category"])
+        self.assertTrue(self.product.status)
+        self.assertEqual(self.product.amount, self.data["amount"])
+        self.assertEqual(self.product.region, self.data["region"])
+        self.assertIn(self.style, self.product.styles.all())
+
+    def test_create_product_image(self) -> None:
+        image = SimpleUploadedFile("test_product_image.jpg", b"content", content_type="image/jpeg")
+        product_image = ProductImage.objects.create(product=self.product, image=image)
+        self.assertEqual(product_image.product, self.product)
+        self.assertIsNotNone(product_image.get_image_url())
+
+
+class ProductSerializerTest(TestCase):
+    def setUp(self) -> None:
+        self.user = Account.objects.create_user(email="test@example.com", password="password")
+        self.category = Category.objects.create(name="category1")
+        self.style = Style.objects.create(name="style1")
+        data = {
+            "name": "product1",
+            "lender": self.user,
+            "brand": "brand",
+            "condition": "condition",
+            "purchase_date": "2024-05-01",
+            "purchase_price": 100000,
+            "rental_fee": 10000,
+            "size": "m",
+            "product_category": self.category,
+            "amount": 1,
+            "region": "Seoul",
+        }
+        self.product = Product.objects.create(**data)
+        self.product.styles.add(self.style)
+        self.factory = APIRequestFactory()
+
+    def test_product_serializer(self) -> None:
+        request = self.factory.get("/api/products/")
+        request.user = self.user
+        serializer = ProductSerializer(instance=self.product, context={"request": request})
+        data = serializer.data
+
+        self.assertEqual(data["name"], self.product.name)
+        self.assertEqual(data["lender"]["email"], self.user.email)
+        self.assertEqual(data["brand"], self.product.brand)
+        self.assertEqual(data["condition"], self.product.condition)
+        self.assertEqual(data["purchase_date"], self.product.purchase_date)
+        self.assertEqual(data["purchase_price"], self.product.purchase_price)
+        self.assertEqual(data["rental_fee"], self.product.rental_fee)
+        self.assertEqual(data["size"], self.product.size)
+        self.assertEqual(data["product_category"], self.product.product_category.name)
+        self.assertEqual(data["status"], self.product.status)
+        self.assertEqual(data["amount"], self.product.amount)
+        self.assertEqual(data["region"], self.product.region)
+
+
+class ProductImageSerializerTest(TestCase):
+    def setUp(self) -> None:
+        self.user = Account.objects.create_user(email="test@example.com", password="password")
+        self.category = Category.objects.create(name="category1")
+        self.style = Style.objects.create(name="style1")
+        data = {
+            "name": "product1",
+            "lender": self.user,
+            "brand": "brand",
+            "condition": "condition",
+            "purchase_date": "2024-05-01",
+            "purchase_price": 100000,
+            "rental_fee": 10000,
+            "size": "m",
+            "product_category": self.category,
+            "amount": 1,
+            "region": "Seoul",
+        }
+        self.product = Product.objects.create(**data)
+        self.product.styles.add(self.style)
+        self.image = SimpleUploadedFile("test_product_image.jpg", b"content", content_type="image/jpg")
+
+    def test_product_image_serializer(self) -> None:
+        image = ProductImage.objects.create(product=self.product, image=self.image)
+        serializer = ProductImageSerializer(image)
+        data = serializer.data
+        self.assertEqual(data["id"], image.id)
+        self.assertIsNotNone(data["image"])
+
+
+class ProductViewSetTest(APITestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.user = Account.objects.create_user(email="test@example.com", password="password")
+        self.client.force_authenticate(user=self.user)
+        self.category = Category.objects.create(name="category1")
+        self.style = Style.objects.create(name="style1")
+        self.data = {
+            "name": "product1",
+            "lender": self.user,
+            "brand": "brand",
+            "condition": "condition",
+            "purchase_date": "2024-05-01",
+            "purchase_price": 100000,
+            "rental_fee": 10000,
+            "size": "m",
+            "product_category": self.category,
+            "amount": 1,
+            "region": "Seoul",
+        }
+
+    def test_list_products(self) -> None:
+        Product.objects.create(**self.data)
+        res = self.client.get(reverse("product-list"))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data.get("count"), 1)
+
+    def test_create_product(self) -> None:
+        url = reverse("product-list")
+        res = self.client.post(url, data=self.data)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Product.objects.count(), 1)
+        self.assertEqual(Product.objects.get().name, self.data["name"])
+
+    def test_update_product(self) -> None:
+        product = Product.objects.create(**self.data)
+        url = reverse("product-detail", kwargs={"pk": product.pk})
+        update_data = {"name": "product2"}
+        res = self.client.patch(url, update_data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Product.objects.get().name, update_data["name"])
+
+    def test_delete_product(self) -> None:
+        product = Product.objects.create(**self.data)
+        url = reverse("product-detail", kwargs={"pk": product.pk})
+        res = self.client.delete(url)
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Product.objects.count(), 0)
+
+
+class ProductPermissionTest(TestCase):
+    def setUp(self) -> None:
+        self.user1 = Account.objects.create_user(email="user1@test.com", password="password", nickname="user1")
+        self.user2 = Account.objects.create_user(email="user2@test.com", password="password", nickname="user2")
+        self.product = Product.objects.create(
+            name="product1",
+            lender=self.user1,
+            brand="brand",
+            condition="new",
+            purchase_date="2022-01-01",
+            purchase_price=100000,
+            rental_fee=5000,
+            size="M",
+            product_category=Category.objects.create(name="category1"),
+            status=True,
+            amount=1,
+            region="Seoul",
+        )
+        self.factory = APIRequestFactory()
+
+    def test_permission_as_lender(self) -> None:
+        request = self.factory.put(f"/api/product/{self.product.pk}/")
+        force_authenticate(request, user=self.user1)
+        request.user = self.user1
+        view = ProductViewSet()
+        permission = IsLenderOrReadOnly()
+        self.assertTrue(permission.has_permission(request, view))
+        self.assertTrue(permission.has_object_permission(request, view, self.product))
+
+    def test_permission_as_other_user(self) -> None:
+        request = self.factory.put(f"/api/product/{self.product.pk}/")
+        force_authenticate(request, user=self.user2)
+        request.user = self.user2
+        view = ProductViewSet()
+        permission = IsLenderOrReadOnly()
+        self.assertTrue(permission.has_permission(request, view))
+        self.assertFalse(permission.has_object_permission(request, view, self.product))
+
+    def test_permission_as_unauthenticated(self) -> None:
+        request = self.factory.put(f"/api/product/{self.product.pk}/")
+        request.user = AnonymousUser()
+        view = ProductViewSet()
+        permission = IsLenderOrReadOnly()
+        self.assertTrue(permission.has_permission(request, view))
+        self.assertFalse(permission.has_object_permission(request, view, self.product))

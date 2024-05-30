@@ -208,7 +208,7 @@ sentry_sdk.init(
 )
 
 DEBUG_TOOLBAR_CONFIG = {
-    'IS_RUNNING_TESTS': False,
+    "IS_RUNNING_TESTS": False,
 }
 
 # 커스텀 설정  # TODO
