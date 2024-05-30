@@ -63,10 +63,15 @@ class RentalHistoryBorrowerView(ListCreateAPIView[RentalHistory]):
         return Response(serializer.data)
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        data = request.data.dict()  # type: ignore
-        data["borrower_id"] = self.request.user.id
+        data = {
+            "borrower_id": request.data.get("borrower_id"),
+            "product": request.data.get("product"),
+            "status": request.data.get("status"),
+        }
         if RentalHistory.objects.filter(**data).exists():
-            return Response({"msg": "이미 대여 신청중인 내역이 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"msg": "이미 상품에 대한 대여 내역이 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        data["rental_date"] = request.data.get("rental_date")
+        data["return_date"] = request.data.get("return_date")
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
