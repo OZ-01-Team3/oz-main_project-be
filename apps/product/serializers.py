@@ -188,4 +188,4 @@ class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
 class RentalHistoryStatusSerializer(serializers.ModelSerializer[RentalHistory]):
     class Meta:
         model = RentalHistory
-        fields = ("id", "status")
+        fields = ("id", "status", "rental_date", "return_date")
