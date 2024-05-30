@@ -19,12 +19,12 @@ from apps.product.serializers import (
     ProductSerializer,
     RentalHistorySerializer,
 )
+from apps.product.utils import clear_cache
 
 CACHE_TIME = 60 * 60 * 2
 PRODUCT_KEY = "products_list"
 
 
-# @method_decorator(cache_page(60 * 60 * 2), name="dispatch")
 class ProductViewSet(viewsets.ModelViewSet[Product]):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsLenderOrReadOnly]
@@ -40,15 +40,15 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
 
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
         serializer.save(lender=self.request.user)
-        cache.delete(PRODUCT_KEY)
+        clear_cache(PRODUCT_KEY)
 
     def perform_update(self, serializer):
         serializer.save()
-        cache.delete(PRODUCT_KEY)
+        clear_cache(PRODUCT_KEY)
 
     def perform_destroy(self, instance):
         instance.delete()
-        cache.delete(PRODUCT_KEY)
+        clear_cache(PRODUCT_KEY)
 
 
 class RentalHistoryBorrowerView(ListCreateAPIView[RentalHistory]):
