@@ -17,7 +17,10 @@ from apps.chat.utils import (
     check_entered_chatroom,
     delete_chatroom,
 )
-from apps.product.serializers import RentalHistoryStatusSerializer
+from apps.product.serializers import (
+    RentalHistorySerializer,
+    RentalHistoryStatusSerializer,
+)
 from apps.user.api_schema import UserInfoSerializer
 
 
