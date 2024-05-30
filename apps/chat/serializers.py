@@ -77,7 +77,7 @@ class MessageSerializer(serializers.ModelSerializer[Message]):
 class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
     product_image = serializers.SerializerMethodField()  # 상품 이미지
     product_name = serializers.CharField(source="product.name", read_only=True)
-    product_rental_fee = serializers.CharField(source="product.rental_fee", read_only=True)
+    product_rental_fee = serializers.IntegerField(source="product.rental_fee", read_only=True)
     product_condition = serializers.CharField(source="product.condition", read_only=True)
 
     class Meta:
