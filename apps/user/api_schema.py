@@ -41,3 +41,8 @@ class SignupRequestSchema(serializers.Serializer[Account]):
 class SignupResponseSchema(serializers.Serializer[Account]):
     access = serializers.CharField()
     refresh = serializers.CharField()
+
+
+class UserInfoSerializer(serializers.Serializer[Account]):
+    nickname = serializers.CharField()
+    profile_img = serializers.ImageField()
