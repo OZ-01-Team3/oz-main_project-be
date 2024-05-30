@@ -1,6 +1,7 @@
 import pdb
 from typing import Any
 
+from django.core.cache import cache
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, status, viewsets
@@ -19,6 +20,9 @@ from apps.product.serializers import (
     RentalHistorySerializer,
 )
 
+CACHE_TIME = 60 * 60 * 2
+PRODUCT_KEY = "products_list"
+
 
 # @method_decorator(cache_page(60 * 60 * 2), name="dispatch")
 class ProductViewSet(viewsets.ModelViewSet[Product]):
@@ -30,11 +34,21 @@ class ProductViewSet(viewsets.ModelViewSet[Product]):
     ordering_fields = ["created_at", "rental_fee", "views", "likes"]
     parser_classes = [MultiPartParser, FormParser]
 
+    def get_queryset(self) -> QuerySet[Product]:
+        queryset = cache.get_or_set(PRODUCT_KEY, Product.objects.all().order_by("-created_at"), CACHE_TIME)
+        return queryset
+
     def perform_create(self, serializer: BaseSerializer[Product]) -> None:
         serializer.save(lender=self.request.user)
+        cache.delete(PRODUCT_KEY)
 
-    def get_queryset(self) -> QuerySet[Product]:
-        return Product.objects.all().order_by("-created_at")
+    def perform_update(self, serializer):
+        serializer.save()
+        cache.delete(PRODUCT_KEY)
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        cache.delete(PRODUCT_KEY)
 
 
 class RentalHistoryBorrowerView(ListCreateAPIView[RentalHistory]):
