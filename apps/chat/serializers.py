@@ -85,7 +85,12 @@ class EnterChatroomSerializer(serializers.ModelSerializer[Chatroom]):
     class Meta:
         model = Chatroom
         fields = [
-            "product", "product_image", "product_name", "product_rental_fee", "product_condition", "rental_history"
+            "product",
+            "product_image",
+            "product_name",
+            "product_rental_fee",
+            "product_condition",
+            "rental_history",
         ]
 
     def to_representation(self, instance: Chatroom) -> Dict[str, Any]:

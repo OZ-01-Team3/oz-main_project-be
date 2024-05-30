@@ -11,13 +11,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.chat import serializers
-from apps.chat.models import Chatroom, Message
+from apps.chat.models import Chatroom
 from apps.chat.utils import (
     change_entered_status,
     check_entered_chatroom,
     delete_chatroom,
 )
-from apps.product.serializers import RentalHistorySerializer, RentalHistoryStatusSerializer
+from apps.product.serializers import RentalHistoryStatusSerializer
 from apps.user.api_schema import UserInfoSerializer
 
 
@@ -86,7 +86,7 @@ class ChatDetailView(APIView):
                 "product_rental_fee": serializer.CharField(),
                 "product_condition": serializer.CharField(),
                 "messages": serializers.MessageSerializer(many=True),
-                "rental_history": RentalHistoryStatusSerializer()
+                "rental_history": RentalHistoryStatusSerializer(),
             },
         ),
         description="""
