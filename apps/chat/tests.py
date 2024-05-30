@@ -167,8 +167,8 @@ class ChatDetailTestCase(APITestCase):
             else:
                 data["nickname"] = self.user.nickname
                 self.redis_conn.lpush(key, json.dumps(data))
-        # self.assertEqual(self.redis_conn.llen(key), 10)
-        # self.assertEqual(Message.objects.count(), 50)
+        self.assertEqual(self.redis_conn.llen(key), 10)
+        self.assertEqual(Message.objects.count(), 50)
 
         url = reverse("chat-detail", kwargs={"chatroom_id": self.chatroom.id})
         response = self.client.get(url, headers={"Authorization": f"Bearer {self.token}"})
