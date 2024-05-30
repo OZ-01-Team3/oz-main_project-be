@@ -257,7 +257,14 @@ class OAuthLoginView(APIView):
             response_data["profile_image"] = user.profile_img.url
         # set_cookie csrftoken
         response = Response(response_data, status=status.HTTP_200_OK)
-        response.set_cookie("csrftoken", get_token(request))
+        response.set_cookie(
+            key="csrftoken",
+            value=get_token(request),
+            domain=settings.CSRF_COOKIE_DOMAIN,
+            samesite=None,
+            secure=settings.CSRF_COOKIE_SECURE,
+            httponly=settings.CSRF_COOKIE_HTTPONLY
+        )
         return response
 
     def create_user(

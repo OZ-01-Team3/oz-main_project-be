@@ -203,7 +203,7 @@ REST_AUTH = {
     "PASSWORD_RESET_USE_SITES_DOMAIN": False,
     "OLD_PASSWORD_FIELD_ENABLED": False,
     "LOGOUT_ON_PASSWORD_CHANGE": False,
-    "SESSION_LOGIN": False,
+    "SESSION_LOGIN": True,
     "USE_JWT": True,  # default: False
     "JWT_AUTH_COOKIE": None,  # default: None
     "JWT_AUTH_REFRESH_COOKIE": None,  # default: None
