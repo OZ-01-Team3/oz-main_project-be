@@ -134,6 +134,10 @@ exec: ## enter the container
 locust: ## start locust runserver
 	$(LCST) -f $(a)
 
+.PHONY: loctime
+loctime:
+	$(LCST) -f $(a) --run-time $(m)
+
 .PHONY: setlocust
 setlocust: ## make user, chatroom for locust test
 	$(PY) $(MNG) $(CTCD)
