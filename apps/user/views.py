@@ -267,10 +267,9 @@ class OAuthLoginView(APIView):
             image_response = urlopen(profile_img_url)
             image_content = image_response.read()
             profile_image = ContentFile(image_content, name=f"{provider_info['name']}-profile-{uuid4_generator(8)}.jpg")
+            user = Account.objects.create(email=email, nickname=nickname, profile_img=profile_image)
         else:
-            profile_image = None
-        user = Account.objects.create(email=email, nickname=nickname, profile_img=profile_image)
-        user.set_unusable_password()
+            user = Account.objects.create(email=email, nickname=nickname)
         user.save()
         return user
 
