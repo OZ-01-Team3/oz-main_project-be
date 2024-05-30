@@ -501,5 +501,7 @@ failed_files/
 config/settings/settings.py
 temp-action/
 #diagrams/
+ERD.md
+*.uml
 
 # End of https://www.toptal.com/developers/gitignore/api/python,django,pycharm,vim,visualstudiocode,venv,macos,windows

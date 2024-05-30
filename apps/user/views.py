@@ -216,7 +216,9 @@ class OAuthLoginView(APIView):
             },
         )
 
-    def login_process_user(self, request: Request, profile_res_data: dict[str, Any], provider_info: dict[str, Any]) -> Response:
+    def login_process_user(
+        self, request: Request, profile_res_data: dict[str, Any], provider_info: dict[str, Any]
+    ) -> Response:
         # 각 provider의 프로필 데이터 처리 로직
         email = profile_res_data.get(provider_info["email_field"])
         nickname = profile_res_data.get(provider_info["nickname_field"])

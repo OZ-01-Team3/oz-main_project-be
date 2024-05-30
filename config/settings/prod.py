@@ -7,12 +7,11 @@ from tools.secrets import get_secret
 
 from .base import *
 
-DEBUG = True
 ENV: dict[str, str] = literal_eval(get_secret())
 
 SECRET_KEY = ENV["DJANGO_SECRET_KEY"]
+DEBUG = True
 ALLOWED_HOSTS = ENV["ALLOWED_HOSTS"].split(",")
-
 
 DATABASES = {
     "default": {
@@ -30,6 +29,22 @@ CORS_ALLOWED_ORIGINS = ENV["ORIGINS"].split(",")
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = ENV["ORIGINS"].split(",")
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+)
 
 # csrf 관련 설정
 # CSRF_TRUSTED_ORIGINS = ["http://*", "https://*"]
@@ -39,6 +54,7 @@ SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_DOMAIN = ENV["DOMAIN"]
 
 
 CHANNEL_LAYERS = {
@@ -48,6 +64,17 @@ CHANNEL_LAYERS = {
             "hosts": [(ENV["REDIS_HOST"], ENV["REDIS_PORT"])],
         },
     },
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{ENV['REDIS_HOST']}:{ENV['REDIS_PORT']}/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": ENV["CACHES_PASSWORD"],
+        },
+    }
 }
 
 # djangorestframework-simplejwt 관련 설정
@@ -120,17 +147,6 @@ STORAGES = {
     },
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{ENV['REDIS_HOST']}:{ENV['REDIS_PORT']}/0",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PASSWORD": ENV["CACHES_PASSWORD"],
-        },
-    }
-}
-
 # django 이메일 인증 설정
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = ENV["EMAIL_HOST"]  # 메일 호스트 서버
@@ -140,7 +156,6 @@ EMAIL_HOST_PASSWORD = ENV["EMAIL_HOST_PASSWORD"]
 EMAIL_USE_TLS = True  # TLS 보안
 EMAIL_USE_SSL = False  # TODO
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-# URL_FRONT = ENV["URL_FRONT"]  # TODO 이건 어디서 나온 설정인지?
 # EMAIL_CONFIRMATION_AUTHENTICATED_REDIREDT_URL = "/"
 
 sentry_sdk.init(
@@ -155,6 +170,7 @@ CONFIRM_CODE_LENGTH = ENV["CONFIRM_CODE_LENGTH"]
 EMAIL_CODE_TIMEOUT = ENV["EMAIL_CODE_TIMEOUT"]
 DJANGO_SUPERUSER_EMAIL = ENV["DJANGO_SUPERUSER_EMAIL"]
 DJANGO_SUPERUSER_PASSWORD = ENV["DJANGO_SUPERUSER_PASSWORD"]
+
 KAKAO_REDIRECT_URI = ENV["KAKAO_REDIRECT_URI"]
 KAKAO_CLIENT_ID = ENV["KAKAO_CLIENT_ID"]
 KAKAO_CLIENT_SECRET = ENV["KAKAO_CLIENT_SECRET"]
