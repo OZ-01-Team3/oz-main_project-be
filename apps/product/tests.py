@@ -53,9 +53,11 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
 
     def test_대여자가_정상적인_물품_대여신청을_했을때(self) -> None:
         data = {
+            "borrower_id": self.borrower.id,
             "product": self.product.uuid,
             "rental_date": timezone.now(),
             "return_date": timezone.now() + timedelta(days=3),
+            "status": "REQUEST",
         }
         response = self.client.post(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -73,9 +75,11 @@ class RentalHistoryBorrowerViewTests(RentalHistoryTestBase):
         )
         self.assertEqual(RentalHistory.objects.count(), 1)
         data = {
-            "product": history.product.uuid,
+            "borrower_id": int(self.borrower.id),
+            "product": str(history.product.uuid),
             "rental_date": history.rental_date.isoformat(),
-            "return_date": history.return_date.isoformat(),  # type: ignore
+            "return_date": history.rental_date.isoformat(),
+            "status": history.status,
         }
         response = self.client.post(self.url, data, headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -188,7 +192,6 @@ class RentalHistoryUpdateViewTests(RentalHistoryTestBase):
         data = {"return_date": timezone.now() + timedelta(days=4)}
 
         response = self.client.patch(self.url, data=data, headers={"Authorization": f"Bearer {self.token}"})
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get("return_date").split("T")[0], data["return_date"].date().isoformat())
 
