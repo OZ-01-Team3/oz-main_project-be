@@ -19,7 +19,7 @@ from apps.user.views import (
     DeleteUserView,
     GoogleLoginView,
     KakaoLoginView,
-    SendCodeView,
+    SendCodeView, NaverLoginView,
 )
 
 # from apps.user.views import CustomConfirmEmailView
@@ -36,6 +36,7 @@ urlpatterns = [
     path("login/", CustomLoginView.as_view(), name="login"),
     path("login/social/kakao/", KakaoLoginView.as_view(), name="kakao_login"),
     path("login/social/google/", GoogleLoginView.as_view(), name="google_login"),
+    path("login/social/naver/", NaverLoginView.as_view(), name="naver_login"),
     path("logout/", LogoutView.as_view(), name="rest_logout"),
     path("detail/", UserDetailsView.as_view(), name="rest_user_details"),
     path("leave/", DeleteUserView.as_view(), name="delete-user"),
