@@ -261,7 +261,7 @@ class OAuthLoginView(APIView):
             key="csrftoken",
             value=get_token(request),
             domain=settings.CSRF_COOKIE_DOMAIN,
-            samesite=settings.CSRF_COOKIE_SAMESITE,
+            samesite=None,
             secure=settings.CSRF_COOKIE_SECURE,
             httponly=settings.CSRF_COOKIE_HTTPONLY
         )
