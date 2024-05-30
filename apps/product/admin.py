@@ -12,6 +12,7 @@ django_stubs_ext.monkeypatch()
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin[Product]):
     list_display = [
+        "uuid",
         "name",
         "lender",
         "condition",
@@ -25,8 +26,8 @@ class ProductAdmin(admin.ModelAdmin[Product]):
         # "rental_history",
     ]
     list_filter = [
-        # "product_category",
-        # "style_category",
+        "product_category",
+        "styles",
         "status",
         "created_at",
         "updated_at",

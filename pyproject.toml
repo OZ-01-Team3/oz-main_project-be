@@ -77,3 +77,10 @@ django_settings_module = "config.settings.settings"
 
 [tool.coverage.run]
 omit = ["*/migrations/*"]
+
+[tool.locust]
+expect-workers = 4
+host = "http://localhost:8000"
+user = 100
+spawn-rate = 5
+run-time = "5m"

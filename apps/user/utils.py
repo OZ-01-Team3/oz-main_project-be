@@ -10,10 +10,10 @@ from django.utils.safestring import SafeString
 
 class EmailThread(threading.Thread):
     def __init__(self, email: str, verification_code: str) -> None:
-        self.subject = render_to_string("account/email/email_confirmation_subject.txt", context={})
+        self.subject = render_to_string("user/email/email_confirmation_subject.txt", context={})
         self.subject = SafeString(" ".join(self.subject.splitlines()))  # 두줄 이상이면 메시지 전송 실패
         self.content = render_to_string(
-            "account/email/email_verification_message.html", context={"code": verification_code}
+            "user/email/email_confirmation_message.html", context={"code": verification_code}
         )
         self.sender = settings.DEFAULT_FROM_EMAIL
         self.recipient_list = [email]
@@ -38,9 +38,9 @@ def generate_confirmation_code() -> str:
 
 
 # def send_email(email, verification_code):
-#     subject = render_to_string("account/email/email_confirmation_subject.txt", context={})
+#     subject = render_to_string("user/email/email_confirmation_subject.txt", context={})
 #     subject = " ".join(subject.splitlines())
-#     content = render_to_string("account/email/email_verification_message.html", context={"code": verification_code})
+#     content = render_to_string("user/email/email_confirmation_message.html", context={"code": verification_code})
 #     sender = settings.DEFAULT_FROM_EMAIL
 #     recipient_list = [email]
 #     send_mail(subject=subject, message="", from_email=sender, recipient_list=recipient_list, html_message=content)

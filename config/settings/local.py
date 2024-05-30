@@ -207,6 +207,10 @@ sentry_sdk.init(
     profiles_sample_rate=env.float("SENTRY_PROFILES_SAMPLE_RATE"),
 )
 
+DEBUG_TOOLBAR_CONFIG = {
+    "IS_RUNNING_TESTS": False,
+}
+
 # 커스텀 설정  # TODO
 FRONT_CONFIRM_URL = env("FRONT_CONFIRM_URL")
 CONFIRM_CODE_LENGTH = env("CONFIRM_CODE_LENGTH")
