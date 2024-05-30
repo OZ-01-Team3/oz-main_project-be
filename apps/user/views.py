@@ -192,7 +192,7 @@ class OAuthLoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return self.login_process_user(profile_response.json(), provider_info)
+        return self.login_process_user(request, profile_response.json(), provider_info)
 
     def get_token(self, code: str, provider_info: dict[str, Any]) -> requests.Response:
         return requests.post(
