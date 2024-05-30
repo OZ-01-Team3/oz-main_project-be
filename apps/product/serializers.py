@@ -183,3 +183,9 @@ class RentalHistorySerializer(serializers.ModelSerializer[RentalHistory]):
         elif instance.status == "BORROWING":
             data["status"] = "대여 진행중"
         return data
+
+
+class RentalHistoryStatusSerializer(serializers.ModelSerializer[RentalHistory]):
+    class Meta:
+        model = RentalHistory
+        fields = ("id", "status")
