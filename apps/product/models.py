@@ -13,7 +13,6 @@ class Product(BaseModel):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     lender = models.ForeignKey("user.Account", on_delete=models.CASCADE, related_name="products")
-    # brand = models.ForeignKey(on_delete=models.SET_NULL, null=True)  # 브랜드
     brand = models.CharField(max_length=20, default="None")
     condition = models.TextField()  # 옷 상태
     description = models.TextField(null=True, blank=True)

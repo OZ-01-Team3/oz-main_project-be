@@ -1,11 +1,9 @@
 from django.db.models import QuerySet
-from django.shortcuts import render
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 
 from apps.mypage.serializers import MyProductSerializer
 from apps.product.models import Product
-from apps.product.serializers import ProductSerializer
 from apps.user.models import Account
 
 
