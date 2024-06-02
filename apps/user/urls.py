@@ -1,5 +1,4 @@
 from dj_rest_auth.jwt_auth import get_refresh_view
-from dj_rest_auth.jwt_auth import get_refresh_view
 from dj_rest_auth.views import (
     LogoutView,
     PasswordChangeView,
@@ -20,7 +19,6 @@ from apps.user.views import (
     NaverLoginView,
     SendCodeView,
 )
-
 
 urlpatterns = [
     path("signup/", CustomSignupView.as_view(), name="signup"),

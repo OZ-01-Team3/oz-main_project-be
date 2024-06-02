@@ -115,7 +115,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
 
 
 class ProductInfoSerializer(serializers.ModelSerializer[Product]):
-    style = serializers.SerializerMethodField()
+    style = serializers.SerializerMethodField()  # type:ignore
     category = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
 

@@ -1,10 +1,7 @@
 import django_stubs_ext
 from django.contrib import admin
 
-from .models import (
-    Product,
-    RentalHistory,
-)
+from .models import Product, RentalHistory
 
 django_stubs_ext.monkeypatch()
 
