@@ -9,5 +9,4 @@ class IsUserOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request: Request, view: APIView, obj: Any) -> bool:
         if request.method in permissions.SAFE_METHODS:
             return True
-        # return str(request.user) == obj.lender.email
         return request.user == getattr(obj, "user", None)

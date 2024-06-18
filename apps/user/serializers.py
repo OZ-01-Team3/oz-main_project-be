@@ -1,13 +1,9 @@
 from typing import Any, Dict
 
 from dj_rest_auth.registration.serializers import RegisterSerializer
-from dj_rest_auth.serializers import LoginSerializer, UserDetailsSerializer
-from django.conf import settings
-from django.db.models import Model
-from rest_framework import exceptions, serializers
+from dj_rest_auth.serializers import UserDetailsSerializer
+from rest_framework import serializers
 
-from apps.category.models import Style
-from apps.category.serializers import StyleSerializer
 from apps.user.models import Account
 
 
@@ -84,34 +80,3 @@ class SendCodeSerializer(serializers.Serializer[Dict[str, Any]]):
 class ConfirmEmailSerializer(serializers.Serializer[Dict[str, Any]]):
     email = serializers.EmailField(required=True)
     code = serializers.CharField(max_length=7, required=True)
-
-    # def validate_code(self, code: str) -> str:
-    #     if len(code) != settings.CODE_LENGTH:
-    #         raise serializers.ValidationError("The length of the code is incorrect.")
-    #     return code
-
-
-# class CustomLoginSerializer(LoginSerializer):
-#     email = serializers.EmailField(required=False, allow_blank=True)
-#     password = serializers.CharField(style={'input_type': 'password'})
-#
-#     def validate(self, attrs):
-#         username = attrs.get('username')
-#         email = attrs.get('email')
-#         password = attrs.get('password')
-#         user = self.get_auth_user(username, email, password)
-#
-#         if not user:
-#             msg = _('Unable to log in with provided credentials.')
-#             raise exceptions.ValidationError(msg)
-#
-#         # Did we get back an active user?
-#         self.validate_auth_user_status(user)
-#
-#         # If required, is the email verified?
-#         if 'dj_rest_auth.registration' in settings.INSTALLED_APPS:
-#             self.validate_email_verification_status(user, email=email)
-#
-#         # attrs['user'] = user
-#         attrs.pop("user", None)
-#         return attrs

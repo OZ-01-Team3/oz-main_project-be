@@ -1,8 +1,7 @@
 import threading
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives, send_mail
-from django.shortcuts import render
+from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django.utils.safestring import SafeString

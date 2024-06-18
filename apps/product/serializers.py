@@ -24,13 +24,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
     lender = UserInfoSerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     is_liked = serializers.SerializerMethodField()
-
-    # product_category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), write_only=True)
-    # category_name = serializers.ReadOnlyField(source="product_category.name")
     product_category = serializers.SlugRelatedField(slug_field="name", queryset=Category.objects.all())
-
-    # styles = serializers.PrimaryKeyRelatedField(queryset=Style.objects.all(), many=True, write_only=True)
-    # style_names = serializers.SerializerMethodField(read_only=True)
     styles = serializers.SlugRelatedField(many=True, slug_field="name", queryset=Style.objects.all())
 
     class Meta:
@@ -49,9 +43,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "size",
             "views",
             "product_category",
-            # "category_name",
             "styles",
-            # "style_names",
             "status",
             "amount",
             "region",
@@ -62,12 +54,6 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "is_liked",
         )
         read_only_fields = ("created_at", "updated_at", "views", "lender", "status", "likes", "is_liked")
-
-    # def get_category_name(self, obj: Product) -> str:
-    #     return obj.product_category.name
-
-    # def get_style_names(self, obj: Product) -> list[str]:
-    #     return [style.name for style in obj.styles.all()]
 
     def get_is_liked(self, obj: Product) -> bool:
         user = self.context["request"].user
@@ -129,7 +115,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
 
 
 class ProductInfoSerializer(serializers.ModelSerializer[Product]):
-    style = serializers.SerializerMethodField()  # type: ignore
+    style = serializers.SerializerMethodField()  # type:ignore
     category = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
 

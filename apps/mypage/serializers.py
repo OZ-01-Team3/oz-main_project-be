@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from apps.category.models import Style
-from apps.category.serializers import StyleSerializer
 from apps.product.models import Product
 from apps.product.serializers import ProductImageSerializer
 

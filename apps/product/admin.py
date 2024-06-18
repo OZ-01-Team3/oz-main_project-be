@@ -1,10 +1,7 @@
 import django_stubs_ext
 from django.contrib import admin
 
-from .models import (  # ProductImage, ProductCategory, StyleCategory
-    Product,
-    RentalHistory,
-)
+from .models import Product, RentalHistory
 
 django_stubs_ext.monkeypatch()
 
@@ -23,7 +20,6 @@ class ProductAdmin(admin.ModelAdmin[Product]):
         "status",
         "created_at",
         "updated_at",
-        # "rental_history",
     ]
     list_filter = [
         "product_category",

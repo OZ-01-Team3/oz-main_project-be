@@ -1,15 +1,11 @@
 from typing import Any
 
-from allauth import app_settings
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import user_field
-from allauth.utils import import_attribute
-from django.conf import settings
 from requests import Request
 from rest_framework.exceptions import ValidationError
 
 from apps.user.models import Account
-from config.settings.settings import FRONT_CONFIRM_URL
 
 
 class CustomAccountAdapter(DefaultAccountAdapter):  # type: ignore
@@ -24,14 +20,3 @@ class CustomAccountAdapter(DefaultAccountAdapter):  # type: ignore
         if Account.objects.filter(email=email).exists():
             raise ValidationError("This account is already registered.")
         return email
-
-    # def get_email_confirmation_url(self, request: Request, emailconfirmation: Any) -> Any:
-    #     """
-    #     이메일 확인 링크 커스텀
-    #     """
-    #     url = settings.FRONT_CONFIRM_URL + emailconfirmation.key
-    #     return url
-
-
-# def get_adapter(request=None):
-#     return import_attribute(app_settings.ADAPTER)(request)

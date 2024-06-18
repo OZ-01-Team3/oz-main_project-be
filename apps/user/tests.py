@@ -1,5 +1,3 @@
-import base64
-import io
 from io import BytesIO
 from unittest import mock
 from unittest.mock import MagicMock, patch
@@ -12,7 +10,7 @@ from django.urls import reverse
 from PIL import Image
 from rest_framework import status
 from rest_framework.test import APIClient
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 
 from apps.user.models import Account
 
@@ -212,9 +210,6 @@ class LogoutViewTests(TestCase):
             "phone": "1234",
         }
         self.user = Account.objects.create_user(**data)
-        # self.refresh = RefreshTokeddn.for_user(self.user)
-        # self.token = TokenModel.objects.create(user=self.user)
-        # self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token.key}")
 
     def test_logout_authenticated_user(self) -> None:
         self.client.force_login(self.user)
@@ -329,7 +324,7 @@ class UserDetailViewTests(TestCase):
         res = self.client.patch(self.url, data, format="multipart", headers={"Authorization": f"Bearer {self.token}"})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    # TODO: 테스트 돌릴 때마다 S3에 올라감 이슈
+    # 테스트 돌릴 때마다 S3에 올라감
     def test_update_profile_image(self) -> None:
         profile_img = self.generate_image_file()
         data = {"email": "user@email.com", "profile_img": profile_img}

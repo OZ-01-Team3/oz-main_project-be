@@ -1,8 +1,6 @@
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.test import APITestCase
 
 from apps.category.models import Category
 from apps.like.models import Like
@@ -12,7 +10,6 @@ from apps.user.models import Account
 
 class TestLikeListCreateView(APITestCase):
     def setUp(self) -> None:
-        # self.client = APIClient()
         self.url = reverse("likes")
         data = {
             "email": "user@email.com",
@@ -21,8 +18,6 @@ class TestLikeListCreateView(APITestCase):
             "phone": "1234",
         }
         self.user = Account.objects.create_user(**data)
-        # self.client.force_login(user=self.user)
-        # self.token = AccessToken.for_user(self.user)
         self.category = Category.objects.create(name="test category")
         self.product = Product.objects.create(
             name="test product",
